@@ -23,28 +23,21 @@
 
       <div class="dashboard-grid">
         <div class="dash-calendar">
-          <div class="dash-section-header"><v-icon size="18" class="mr-2">mdi-calendar-month</v-icon> Vacaciones del Mes</div>
+          <div class="dash-section-header"><v-icon size="18" class="mr-2">mdi-calendar-month</v-icon> Calendario de Ausencias</div>
           <div class="month-nav">
             <v-btn icon="mdi-chevron-left" size="x-small" variant="text" @click="prevMonth" />
             <span class="month-nav-label">{{ monthName }} {{ currentYear }}</span>
             <v-btn icon="mdi-chevron-right" size="x-small" variant="text" @click="nextMonth" />
           </div>
-          <div v-if="monthEvents.length" class="event-list">
-            <div v-for="ev in monthEvents" :key="ev.id" class="event-item">
-              <div class="event-dot" :class="ev.type === 'REST_DAY' ? 'rest' : 'vacation'" />
-              <div class="event-info">
-                <div class="event-name">{{ ev.title }}</div>
-                <div class="event-dates">
-                  <v-icon size="12" class="mr-1">mdi-calendar-range</v-icon>
-                  {{ formatRange(ev.start, ev.end_date || ev.end) }}
-                  <span class="event-days">{{ ev.days_requested || ev.days || '' }} día(s)</span>
-                </div>
+          <div class="cal-grid">
+            <div v-for="d in dayNames" :key="d" class="cal-header-cell">{{ d }}</div>
+            <div v-for="(day, i) in calendarDays" :key="i" class="cal-cell" :class="{ 'other-month': !day.isCurrent, 'is-today': day.isToday }">
+              <span class="cal-num">{{ day.num }}</span>
+              <div class="cal-names">
+                <span v-for="(name, ni) in day.employees.slice(0, 3)" :key="ni" class="cal-name" :class="day.type">{{ name }}</span>
+                <span v-if="day.employees.length > 3" class="cal-more">+{{ day.employees.length - 3 }}</span>
               </div>
             </div>
-          </div>
-          <div v-else class="empty-state">
-            <v-icon size="32" color="#334155">mdi-calendar-blank</v-icon>
-            <span>Sin vacaciones este mes</span>
           </div>
         </div>
 
@@ -78,10 +71,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import api from '@/api/axios'
-import { useNotificationStore } from '@/stores/notification'
 import Header from '@/components/layout/Header.vue'
 
-const notification = useNotificationStore()
 const stats = ref({ totalEmployees: 0, activeVacations: 0, pendingRequests: 0 })
 const events = ref<any[]>([])
 const birthdays = ref<any[]>([])
@@ -90,6 +81,7 @@ const loadError = ref('')
 const currentMonth = ref(new Date().getMonth())
 const currentYear = ref(new Date().getFullYear())
 
+const dayNames = ['D', 'L', 'M', 'M', 'J', 'V', 'S']
 const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
 const monthName = computed(() => monthNames[currentMonth.value] || '')
 
@@ -105,29 +97,50 @@ const statsCards = computed(() => [
   { label: 'Pendientes de Firmar', value: stats.value.pendingRequests || 0, icon: 'mdi-file-clock', color: 'warning', trend: -1 },
 ])
 
-const monthEvents = computed(() => {
-  const list = events.value || []
+const calendarDays = computed(() => {
   const year = currentYear.value
   const month = currentMonth.value
   if (isNaN(year) || isNaN(month)) return []
+  const evts = Array.isArray(events.value) ? events.value : []
+  const today = new Date()
+  const days: any[] = []
 
-  return list.filter((e: any) => {
-    if (!e || !e.start) return false
-    const s = new Date(e.start)
-    return s.getFullYear() === year && s.getMonth() === month
-  }).sort((a: any, b: any) => new Date(a.start).getTime() - new Date(b.start).getTime())
-})
+  const firstDay = new Date(year, month, 1)
+  const lastDay = new Date(year, month + 1, 0)
+  const startPad = firstDay.getDay()
 
-function formatRange(start: string, end: string) {
-  if (!start) return ''
-  const s = new Date(start)
-  const e = end ? new Date(end) : null
-  const opts: any = { day: 'numeric', month: 'short' }
-  if (!e || s.getMonth() === e.getMonth()) {
-    return `${s.getDate()} - ${e ? e.getDate() : '?'} ${s.toLocaleDateString('es-MX', { month: 'short' })}`
+  for (let p = 0; p < startPad; p++) {
+    const d = new Date(year, month, p - startPad + 1)
+    days.push({ num: d.getDate(), isCurrent: false, isToday: false, employees: [], type: '' })
   }
-  return `${s.getDate()} ${s.toLocaleDateString('es-MX', { month: 'short' })} - ${e.getDate()} ${e.toLocaleDateString('es-MX', { month: 'short' })}`
-}
+
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const date = new Date(year, month, d)
+    const employees: string[] = []
+    let type = ''
+    for (const ev of evts) {
+      if (!ev || !ev.start || !ev.title) continue
+      const s = new Date(ev.start)
+      const end = new Date(ev.end || ev.end_date)
+      end.setHours(23, 59, 59, 999)
+      if (date >= s && date <= end) {
+        employees.push(ev.title)
+        if (ev.type === 'REST_DAY') type = 'rest'
+        else if (!type) type = 'vacation'
+      }
+    }
+    const isT = date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear()
+    days.push({ num: d, isCurrent: true, isToday: isT, employees, type })
+  }
+
+  const remaining = 42 - days.length
+  for (let r = 0; r < remaining; r++) {
+    const d = new Date(year, month + 1, r + 1)
+    days.push({ num: d.getDate(), isCurrent: false, isToday: false, employees: [], type: '' })
+  }
+
+  return days
+})
 
 const prevMonth = () => {
   if (currentMonth.value === 0) { currentMonth.value = 11; currentYear.value-- }
@@ -146,16 +159,12 @@ const loadData = async () => {
   try {
     const s = await api.get('/admin/dashboard/stats')
     stats.value = s.data || { totalEmployees: 0, activeVacations: 0, pendingRequests: 0 }
-  } catch (err: any) {
-    errors.push('stats')
-  }
+  } catch { errors.push('stats') }
 
   try {
     const e = await api.get('/admin/dashboard/events')
     events.value = Array.isArray(e.data) ? e.data : []
-  } catch (err: any) {
-    errors.push('eventos')
-  }
+  } catch { errors.push('eventos') }
 
   try {
     const b = await api.get('/admin/birthdays')
@@ -164,20 +173,15 @@ const loadData = async () => {
       if (!item) return null
       const d = item.birth_date ? new Date(item.birth_date) : new Date()
       return {
-        id: item.id,
-        name: item.name || '',
-        department: item.department || '',
+        id: item.id, name: item.name || '', department: item.department || '',
         day: isNaN(d.getTime()) ? 0 : d.getUTCDate(),
         month: isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-MX', { month: 'short' }),
       }
     }).filter(Boolean)
-  } catch (err: any) {
-    errors.push('cumpleaños')
-  }
+  } catch { errors.push('cumpleaños') }
 
   if (errors.length === 3) {
     loadError.value = 'No se pudo cargar el dashboard. Verifica conexión a BD.'
-    notification.error(loadError.value)
   } else if (errors.length > 0) {
     console.warn('Dashboard parcial:', errors.join(' | '))
   }
@@ -202,29 +206,27 @@ onMounted(loadData)
 .stat-trend { position: absolute; top: 16px; right: 16px; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 .stat-trend.up { background: rgba(34,197,94,0.1); color: #22C55E; }
 .stat-trend.down { background: rgba(239,68,68,0.1); color: #EF4444; }
+
 .dashboard-grid { display: grid; grid-template-columns: 1fr 360px; gap: 20px; }
 .dash-calendar, .dash-right { display: flex; flex-direction: column; gap: 20px; }
 .dash-calendar, .dash-quick, .dash-birthdays { background: #1E293B; border-radius: 16px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); }
 .dash-section-header { font-size: 14px; font-weight: 600; color: #F1F5F9; margin-bottom: 16px; display: flex; align-items: center; }
-.month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
 .month-nav-label { font-size: 15px; font-weight: 700; color: #F1F5F9; }
 
-.event-list { display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; padding-right: 4px; }
-.event-list::-webkit-scrollbar { width: 4px; }
-.event-list::-webkit-scrollbar-track { background: transparent; }
-.event-list::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
-
-.event-item { display: flex; gap: 12px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.02); transition: background 0.15s; }
-.event-item:hover { background: rgba(99,102,241,0.06); }
-
-.event-dot { width: 8px; height: 8px; min-width: 8px; border-radius: 50%; margin-top: 6px; }
-.event-dot.vacation { background: #6366F1; }
-.event-dot.rest { background: #F97316; }
-
-.event-info { flex: 1; min-width: 0; }
-.event-name { font-size: 13px; font-weight: 600; color: #F1F5F9; }
-.event-dates { font-size: 11px; color: #64748B; margin-top: 2px; display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
-.event-days { margin-left: auto; font-weight: 600; color: #6366F1; font-size: 11px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.cal-header-cell { font-size: 10px; font-weight: 700; color: #475569; text-align: center; padding: 6px 0; text-transform: uppercase; letter-spacing: 0.5px; }
+.cal-cell { background: rgba(255,255,255,0.02); border-radius: 8px; padding: 4px; min-height: 60px; display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
+.cal-cell:hover { background: rgba(99,102,241,0.06); }
+.other-month { opacity: 0.3; }
+.is-today { background: rgba(99,102,241,0.12) !important; border-color: rgba(99,102,241,0.3); }
+.cal-num { font-size: 11px; font-weight: 600; color: #94A3B8; line-height: 1; margin-bottom: 3px; }
+.is-today .cal-num { color: #6366F1; }
+.cal-names { display: flex; flex-direction: column; gap: 1px; overflow: hidden; }
+.cal-name { font-size: 9px; padding: 1px 4px; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
+.cal-name.vacation { background: rgba(99,102,241,0.2); color: #818CF8; }
+.cal-name.rest { background: rgba(249,115,22,0.2); color: #FB923C; }
+.cal-more { font-size: 9px; color: #64748B; padding: 1px 4px; font-weight: 600; }
 
 .quick-grid { display: flex; flex-direction: column; gap: 8px; }
 .quick-btn { height: 44px !important; font-weight: 600; justify-content: flex-start; }
