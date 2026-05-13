@@ -8,6 +8,11 @@ import { verifyToken, requireRole } from '../middleware/auth';
 const router = Router();
 
 router.use(verifyToken);
+
+router.get('/dashboard/stats', getDashboardStats);
+router.get('/dashboard/events', getCalendarEvents);
+router.get('/birthdays', getUpcomingBirthdays);
+
 router.use(requireRole(['admin']));
 
 router.get('/users', getUsers);
@@ -19,11 +24,7 @@ router.get('/employees', getEmployees);
 router.post('/employees', createEmployee);
 router.put('/employees/:id', updateEmployee);
 router.delete('/employees/:id', deleteEmployee);
-router.get('/birthdays', getUpcomingBirthdays);
 
 router.post('/import-employees', importEmployees);
-
-router.get('/dashboard/stats', getDashboardStats);
-router.get('/dashboard/events', getCalendarEvents);
 
 export default router;

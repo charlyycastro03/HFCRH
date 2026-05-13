@@ -92,6 +92,9 @@
                 type="number"
                 prepend-inner-icon="mdi-counter"
               />
+              <div v-if="editedItem.hire_date" class="proportional-hint">
+                LFT proporcional: <strong>{{ proportionalDays }}</strong> días para {{ yearsOfService }} año(s)
+              </div>
             </v-col>
             <v-col cols="12">
               <v-switch
@@ -154,6 +157,40 @@ const filteredEmployees = computed(() => {
   return employees.value.filter(e => e.name?.toLowerCase().includes(t) || e.department?.toLowerCase().includes(t))
 })
 
+const yearsOfService = computed(() => {
+  if (!editedItem.value.hire_date) return 0
+  const hire = new Date(editedItem.value.hire_date)
+  const today = new Date()
+  let y = today.getFullYear() - hire.getFullYear()
+  const m = today.getMonth() - hire.getMonth()
+  if (m < 0 || (m === 0 && today.getDate() < hire.getDate())) y--
+  return Math.max(0, y)
+})
+
+function getDaysGrantedByYear(y: number): number {
+  if (y < 1) return 0
+  if (y === 1) return 12
+  if (y === 2) return 14
+  if (y === 3) return 16
+  if (y === 4) return 18
+  if (y === 5) return 20
+  return 22
+}
+
+const proportionalDays = computed(() => {
+  if (!editedItem.value.hire_date) return 0
+  const hire = new Date(editedItem.value.hire_date)
+  const today = new Date()
+  let years = today.getFullYear() - hire.getFullYear()
+  let months = today.getMonth() - hire.getMonth()
+  if (today.getDate() < hire.getDate()) months--
+  if (months < 0) { months += 12; years-- }
+  years = Math.max(0, years)
+  const totalMonths = years * 12 + months
+  const daysPerYear = getDaysGrantedByYear(years)
+  return Math.round((totalMonths / 12) * daysPerYear)
+})
+
 const formTitle = computed(() => editedIndex.value === -1 ? 'Nuevo Empleado' : 'Editar Empleado')
 
 const formatDate = (d: string) => {
@@ -195,14 +232,18 @@ const save = async () => {
   if (!editedItem.value.name) return
   saving.value = true
   try {
+    let res: any
     if (editedIndex.value > -1) {
-      await api.put(`/admin/employees/${editedItem.value.id}`, editedItem.value)
+      const { data } = await api.put(`/admin/employees/${editedItem.value.id}`, editedItem.value)
+      res = data
     } else {
-      await api.post('/admin/employees', editedItem.value)
+      const { data } = await api.post('/admin/employees', editedItem.value)
+      res = data
     }
     dialog.value = false
     await fetchEmployees()
-    notification.success('Empleado guardado correctamente')
+    const msg = res?.daysGranted ? `Días LFT proporcionales asignados: ${res.daysGranted}` : 'Empleado guardado correctamente'
+    notification.success(msg)
   } catch (e: any) {
     notification.error(e.response?.data?.msg || 'Error al guardar')
   } finally { saving.value = false }
@@ -294,6 +335,13 @@ onMounted(fetchEmployees)
 .days-chip.mid { background: rgba(245,158,11,0.12); color: #F59E0B; }
 .days-chip.low { background: rgba(239,68,68,0.12); color: #EF4444; }
 .days-chip.zero { background: rgba(71,85,105,0.2); color: #64748B; }
+
+.proportional-hint {
+  font-size: 11px;
+  color: #6366F1;
+  margin-top: 4px;
+  margin-left: 40px;
+}
 
 .form-title {
   font-size: 18px;

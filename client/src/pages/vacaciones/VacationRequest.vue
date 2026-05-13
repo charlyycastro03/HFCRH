@@ -107,6 +107,40 @@
               </div>
             </v-item-group>
 
+            <Transition name="expand">
+              <div v-if="employeeInfo" class="calendar-preview-card">
+                <div class="cal-preview-header">
+                  <v-icon size="16" color="primary">mdi-calendar-check</v-icon>
+                  <span>Vista previa del período</span>
+                </div>
+                <div class="cal-preview-dates">
+                  <div class="cal-date-box">
+                    <div class="cal-date-label">Inicio</div>
+                    <div class="cal-date-value">{{ startDate ? formatDateLong(startDate) : '—' }}</div>
+                  </div>
+                  <div class="cal-arrow">
+                    <v-icon size="20" color="primary">mdi-arrow-right</v-icon>
+                  </div>
+                  <div class="cal-date-box">
+                    <div class="cal-date-label">Fin</div>
+                    <div class="cal-date-value">{{ endDate ? formatDateLong(endDate) : '—' }}</div>
+                  </div>
+                  <div class="cal-summary-box">
+                    <div class="cal-summary-number" :class="{ negative: daysRemaining < 0 }">{{ calculatedDays }}</div>
+                    <div class="cal-summary-label">días solicitados</div>
+                  </div>
+                  <div class="cal-summary-box">
+                    <div class="cal-summary-number" :style="{ color: daysColor }">{{ daysRemaining }}</div>
+                    <div class="cal-summary-label">saldo después</div>
+                  </div>
+                </div>
+                <div v-if="returnDate" class="cal-return-hint">
+                  <v-icon size="14" color="success">mdi-check-circle</v-icon>
+                  Regreso: {{ returnDate }}
+                </div>
+              </div>
+            </Transition>
+
             <div v-if="employeeInfo" class="form-section">
               <div class="form-row">
                 <v-text-field
@@ -151,6 +185,29 @@
                 />
               </div>
             </div>
+
+            <Transition name="expand">
+              <div v-if="employeeInfo?.es_arquitecto" class="descansos-section">
+                <div class="descansos-label">
+                  <v-icon size="16" color="secondary">mdi-briefcase-off</v-icon>
+                  Días de descanso (independientes de vacaciones)
+                </div>
+                <div class="descansos-grid">
+                  <div class="descanso-card" :class="{ active: descansos.includes('1') }" @click="toggleDescanso('1')">
+                    <v-icon size="24" :color="descansos.includes('1') ? '#F97316' : '#475569'">mdi-calendar-check</v-icon>
+                    <div class="descanso-name">Descanso 1</div>
+                    <div class="descanso-date">{{ descanso1Date || 'Sin fecha' }}</div>
+                    <input type="date" v-model="descanso1Date" class="descanso-input" @click.stop @change="toggleDescanso('1')" />
+                  </div>
+                  <div class="descanso-card" :class="{ active: descansos.includes('2') }" @click="toggleDescanso('2')">
+                    <v-icon size="24" :color="descansos.includes('2') ? '#F97316' : '#475569'">mdi-calendar-check</v-icon>
+                    <div class="descanso-name">Descanso 2</div>
+                    <div class="descanso-date">{{ descanso2Date || 'Sin fecha' }}</div>
+                    <input type="date" v-model="descanso2Date" class="descanso-input" @click.stop @change="toggleDescanso('2')" />
+                  </div>
+                </div>
+              </div>
+            </Transition>
 
             <v-textarea
               v-if="employeeInfo"
@@ -312,6 +369,9 @@ const deleteItem = ref<any>(null)
 const deleting = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 const uploadTarget = ref<any>(null)
+const descansos = ref<string[]>([])
+const descanso1Date = ref('')
+const descanso2Date = ref('')
 
 const minDate = computed(() => new Date().toISOString().split('T')[0])
 
@@ -347,9 +407,16 @@ const seniority = computed(() => {
 })
 
 const formatDate = (d: string) => d ? new Date(d).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'
+const formatDateLong = (d: string) => d ? new Date(d).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' }) : '-'
 const formatShort = (d: string) => d ? new Date(d).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) : '-'
 const statusColor = (s: string) => s === 'APPROVED' ? 'success' : s === 'REJECTED' ? 'error' : 'warning'
 const statusLabel = (s: string) => s === 'APPROVED' ? 'Aprobada' : s === 'REJECTED' ? 'Rechazada' : 'Pendiente'
+
+const toggleDescanso = (n: string) => {
+  const idx = descansos.value.indexOf(n)
+  if (idx > -1) descansos.value.splice(idx, 1)
+  else descansos.value.push(n)
+}
 
 const loadEmployees = async () => {
   try { const { data } = await api.get('/admin/employees'); employees.value = data }
@@ -358,6 +425,7 @@ const loadEmployees = async () => {
 
 const loadEmployeeInfo = async () => {
   if (!selectedEmployeeId.value) { employeeInfo.value = null; history.value = []; return }
+  descansos.value = []; descanso1Date.value = ''; descanso2Date.value = ''
   try {
     const { data } = await api.get(`/vacations/employee/${selectedEmployeeId.value}/summary`)
     employeeInfo.value = data.data || data
@@ -384,7 +452,7 @@ const submit = async () => {
   if (!selectedEmployeeId.value || !calculatedDays.value) return
   submitting.value = true; successMsg.value = ''; errorMsg.value = ''
   try {
-    await api.post('/vacations/requests', {
+    const payload: any = {
       employee_id: selectedEmployeeId.value,
       request_date: new Date().toISOString().split('T')[0],
       start_date: startDate.value,
@@ -394,10 +462,16 @@ const submit = async () => {
       status: 'PENDING',
       comments: comments.value,
       type: requestType.value,
-    })
+    }
+    if (employeeInfo.value?.es_arquitecto && descansos.value.length > 0) {
+      payload.descansos = descansos.value
+      payload.descanso_dates = descansos.value.map((d: string) => d === '1' ? descanso1Date.value : descanso2Date.value)
+    }
+    await api.post('/vacations/requests', payload)
     notification.success('Solicitud enviada correctamente')
     startDate.value = ''; endDate.value = ''; calculatedDays.value = 0
-    returnDate.value = ''; comments.value = ''
+    returnDate.value = ''; comments.value = ''; descansos.value = []
+    descanso1Date.value = ''; descanso2Date.value = ''
     await loadEmployeeInfo()
   } catch (err: any) {
     errorMsg.value = err.response?.data?.msg || 'Error al crear solicitud'
@@ -406,40 +480,40 @@ const submit = async () => {
 }
 
 const printRequest = (item: any) => {
-  const printWindow = window.open('', '_blank')
-  if (!printWindow) return
-  printWindow.document.write(`<!DOCTYPE html><html><head><title>Solicitud #${item.id} - HFC</title><style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',Arial,sans-serif;padding:48px;background:#fff;color:#1a1a2e}
-.header{text-align:center;border-bottom:3px solid #6366F1;padding-bottom:24px;margin-bottom:32px}
-.header h1{font-size:28px;color:#6366F1;letter-spacing:4px;margin-bottom:4px}
-.header p{color:#666;font-size:13px}
-.separator{height:2px;background:linear-gradient(90deg,#6366F1,#F97316);margin:24px 0;border:none}
-.info-table{width:100%;border-collapse:collapse;margin-bottom:28px}
-.info-table td{padding:12px 16px;border-bottom:1px solid #eee}
-.info-table td:first-child{font-weight:600;color:#555;width:160px;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
-.info-table td:last-child{color:#1a1a2e;font-size:14px}
-.badge{display:inline-block;padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600}
-.badge-APPROVED{background:#dcfce7;color:#16a34a}.badge-PENDING{background:#fef3c7;color:#d97706}.badge-REJECTED{background:#fee2e2;color:#dc2626}
-.badge-VACATION{background:#ede9fe;color:#7c3aed}.badge-REST{background:#fae8ff;color:#a21caf}
-.signatures{display:flex;gap:48px;margin-top:40px}
-.sig-block{text-align:center;flex:1}
-.sig-line{border-bottom:1px solid #333;padding-bottom:48px;margin-bottom:8px}
-.sig-label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.5px}
-.footer{text-align:center;margin-top:40px;padding-top:16px;border-top:1px solid #eee;color:#999;font-size:11px}
-@media print{body{padding:24px}}
-</style></head><body>
+  const printContent = document.createElement('div')
+  printContent.innerHTML = `<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; background: #fff; color: #1a1a2e; }
+.header { text-align: center; border-bottom: 3px solid #6366F1; padding-bottom: 20px; margin-bottom: 28px; }
+.header h1 { font-size: 26px; color: #6366F1; letter-spacing: 3px; margin-bottom: 4px; }
+.header p { color: #666; font-size: 12px; }
+.separator { height: 2px; background: linear-gradient(90deg, #6366F1, #F97316); margin: 20px 0; border: none; }
+.info-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+.info-table td { padding: 10px 14px; border-bottom: 1px solid #eee; }
+.info-table td:first-child { font-weight: 600; color: #555; width: 140px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+.info-table td:last-child { color: #1a1a2e; font-size: 13px; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; }
+.badge-APPROVED { background: #dcfce7; color: #16a34a; }
+.badge-PENDING { background: #fef3c7; color: #d97706; }
+.badge-REJECTED { background: #fee2e2; color: #dc2626; }
+.signatures { display: flex; gap: 40px; margin-top: 36px; }
+.sig-block { text-align: center; flex: 1; }
+.sig-line { border-bottom: 1px solid #333; padding-bottom: 44px; margin-bottom: 6px; }
+.sig-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: .5px; }
+.footer { text-align: center; margin-top: 36px; padding-top: 14px; border-top: 1px solid #eee; color: #999; font-size: 10px; }
+@media print { body { padding: 20px; } }
+</style>
 <div class="header">
   <h1>HFC CONSTRUCCIONES</h1>
   <p>Solicitud de ${item.type === 'VACATION' ? 'Vacaciones' : 'Día de Descanso'} · Sistema de Gestión RH</p>
 </div>
 <table class="info-table">
   <tr><td>Folio</td><td>#${item.id}</td></tr>
-  <tr><td>Empleado</td><td><strong>${item.employee_name}</strong></td></tr>
-  <tr><td>Fecha Solicitud</td><td>${new Date(item.request_date).toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</td></tr>
+  <tr><td>Empleado</td><td><strong>${item.employee_name || item.name || 'N/A'}</strong></td></tr>
+  <tr><td>Fecha Solicitud</td><td>${new Date(item.request_date).toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</td></tr>
   <tr><td>Período</td><td>${new Date(item.start_date).toLocaleDateString('es-MX')} — ${new Date(item.end_date).toLocaleDateString('es-MX')}</td></tr>
   <tr><td>Días</td><td>${item.days_requested}</td></tr>
-  <tr><td>Tipo</td><td><span class="badge badge-${item.type === 'VACATION' ? 'VACATION' : 'REST'}">${item.type === 'VACATION' ? 'Vacaciones' : 'Día de Descanso'}</span></td></tr>
+  <tr><td>Tipo</td><td><span class="badge badge-${item.status}">${item.type === 'VACATION' ? 'Vacaciones' : 'Día de Descanso'}</span></td></tr>
   <tr><td>Estado</td><td><span class="badge badge-${item.status}">${statusLabel(item.status)}</span></td></tr>
   ${item.comments ? `<tr><td>Motivo</td><td>${item.comments}</td></tr>` : ''}
 </table>
@@ -455,10 +529,16 @@ body{font-family:'Segoe UI',Arial,sans-serif;padding:48px;background:#fff;color:
   </div>
 </div>
 <div class="footer">
-  <p>Portal RH · HFC Construcciones · Generado: ${new Date().toLocaleDateString('es-MX')} · Folio #${item.id}</p>
-</div>
-<script>window.onload=function(){window.print();window.close()}<\/script></body></html>`)
+  <p>Portal RH · HFC Construcciones · ${new Date().toLocaleDateString('es-MX')} · Folio #${item.id}</p>
+</div>`
+
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) return
+  printWindow.document.body.appendChild(printContent)
   printWindow.document.close()
+  printWindow.onload = () => { printWindow.print(); printWindow.close() }
+  printWindow.onerror = () => { printWindow.print(); printWindow.close() }
+  setTimeout(() => { try { printWindow.print(); printWindow.close() } catch {} }, 500)
 }
 
 const uploadPdf = (item: any) => { uploadTarget.value = item; fileInput.value?.click() }
@@ -639,6 +719,153 @@ onMounted(loadEmployees)
   background: rgba(99,102,241,0.15);
   border-color: #6366F1;
   color: #6366F1;
+}
+
+.calendar-preview-card {
+  background: rgba(99,102,241,0.06);
+  border: 1px solid rgba(99,102,241,0.15);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.cal-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6366F1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.cal-preview-dates {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cal-date-box { flex: 1; min-width: 100px; }
+
+.cal-date-label {
+  font-size: 10px;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.cal-date-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #F1F5F9;
+  text-transform: capitalize;
+}
+
+.cal-arrow { display: flex; align-items: center; }
+
+.cal-summary-box {
+  text-align: center;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+  padding: 10px 16px;
+  min-width: 80px;
+}
+
+.cal-summary-number {
+  font-size: 22px;
+  font-weight: 800;
+  color: #6366F1;
+  line-height: 1;
+}
+
+.cal-summary-number.negative { color: #EF4444; }
+
+.cal-summary-label {
+  font-size: 10px;
+  color: #64748B;
+  margin-top: 2px;
+}
+
+.cal-return-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #22C55E;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+.descansos-section {
+  margin-top: 16px;
+  background: rgba(249,115,22,0.05);
+  border: 1px solid rgba(249,115,22,0.15);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.descansos-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #F97316;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.descansos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.descanso-card {
+  position: relative;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.descanso-card:hover { border-color: rgba(249,115,22,0.3); }
+
+.descanso-card.active {
+  background: rgba(249,115,22,0.1);
+  border-color: #F97316;
+}
+
+.descanso-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94A3B8;
+}
+
+.descanso-date {
+  font-size: 11px;
+  color: #64748B;
+}
+
+.descanso-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
 }
 
 .form-section { margin-top: 16px; }
