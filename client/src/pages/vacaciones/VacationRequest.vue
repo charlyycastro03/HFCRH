@@ -78,6 +78,10 @@
                   <div class="balance-value">{{ employeeInfo.work_days_per_week }}</div>
                   <div class="balance-label">Días/Sem</div>
                 </div>
+                <div v-if="employeeInfo.es_arquitecto" class="balance-item" style="grid-column: span 4;">
+                  <div class="balance-value" style="color: #F97316; font-size: 16px;">{{ employeeInfo.rest_days_used || 0 }} / 2</div>
+                  <div class="balance-label">Descansos usados este mes (NO descuentan de vacaciones)</div>
+                </div>
               </div>
             </Transition>
 
@@ -91,7 +95,8 @@
                     @click="toggle"
                   >
                     <v-icon size="20" class="mb-1">{{ isSelected ? 'mdi-check-circle' : 'mdi-circle-outline' }}</v-icon>
-                    Vacaciones
+                    <span>Vacaciones</span>
+                    <span class="toggle-sub">Usa días de vacaciones</span>
                   </div>
                 </v-item>
                 <v-item v-slot="{ isSelected, toggle }" value="REST_DAY">
@@ -101,7 +106,8 @@
                     @click="toggle"
                   >
                     <v-icon size="20" class="mb-1">{{ isSelected ? 'mdi-check-circle' : 'mdi-circle-outline' }}</v-icon>
-                    Día de Descanso
+                    <span>Día de Descanso</span>
+                    <span class="toggle-sub">No descuenta de vacaciones</span>
                   </div>
                 </v-item>
               </div>
@@ -388,9 +394,11 @@ const daysColor = computed(() => {
   return '#22C55E'
 })
 
-const canSubmit = computed(() =>
-  selectedEmployeeId.value && startDate.value && endDate.value && calculatedDays.value > 0 && daysRemaining.value >= 0
-)
+const canSubmit = computed(() => {
+  if (!selectedEmployeeId.value || !startDate.value || !endDate.value || calculatedDays.value <= 0) return false
+  if (requestType.value === 'REST_DAY') return true
+  return daysRemaining.value >= 0
+})
 
 const seniority = computed(() => {
   if (!employeeInfo.value?.hire_date) return '-'
@@ -738,6 +746,13 @@ onMounted(loadEmployees)
   background: rgba(99,102,241,0.15);
   border-color: #6366F1;
   color: #6366F1;
+}
+
+.toggle-sub {
+  font-size: 9px;
+  font-weight: 400;
+  opacity: 0.7;
+  margin-top: 2px;
 }
 
 .calendar-preview-card {
