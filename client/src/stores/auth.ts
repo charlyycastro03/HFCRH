@@ -61,7 +61,9 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async restoreSession() {
-      if (!this.token) return
+      const token = this.token || localStorage.getItem('token')
+      if (!token) return
+      this.token = token
       try {
         const { data } = await api.get('/auth/profile')
         this.user = data.user

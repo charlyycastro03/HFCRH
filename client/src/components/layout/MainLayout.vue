@@ -23,7 +23,7 @@ const authStore = useAuthStore()
 const router = useRouter()
 
 onMounted(async () => {
-  if (!authStore.isAuthenticated) {
+  if (!localStorage.getItem('token')) {
     router.push('/login')
   } else if (!authStore.user) {
     await authStore.restoreSession()
