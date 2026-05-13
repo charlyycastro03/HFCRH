@@ -65,20 +65,14 @@ export class VacationPeriodService {
   async getEmployeeVacationSummary(employeeId: number): Promise<VacationSummary> {
     const db = await getDb();
 
-    let [periods] = await db.query<any[]>(
+    await this.syncEmployeePeriods(employeeId);
+
+    const [periods] = await db.query<any[]>(
       `SELECT * FROM vacation_periods WHERE employee_id = ? ORDER BY period_year DESC, start_date DESC LIMIT 1`,
       [employeeId]
     );
 
-    if (!periods.length) {
-      await this.syncEmployeePeriods(employeeId);
-      const [secondTry] = await db.query<any[]>(
-        `SELECT * FROM vacation_periods WHERE employee_id = ? ORDER BY period_year DESC, start_date DESC LIMIT 1`,
-        [employeeId]
-      );
-      if (!secondTry.length) throw new Error('No se pudieron generar períodos');
-      periods = secondTry;
-    }
+    if (!periods.length) throw new Error('No se pudieron generar períodos');
 
     const currentPeriod = periods[0];
     const [requestRows] = await db.query<any[]>(

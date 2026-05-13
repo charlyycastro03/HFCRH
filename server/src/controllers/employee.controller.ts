@@ -24,10 +24,11 @@ function calculateProportionalDays(hireDateStr: string | null): number {
   if (months < 0) { months += 12; years--; }
   years = Math.max(0, years);
 
-  const totalMonths = years * 12 + months;
-  const fullYearDays = getDaysGrantedByYear(Math.max(1, years));
-  const proportionalDays = Math.round((totalMonths / 12) * fullYearDays);
-  return Math.max(0, proportionalDays);
+  if (years < 1) {
+    return Math.round(12 * months / 12);
+  }
+
+  return getDaysGrantedByYear(years);
 }
 
 export async function getEmployees(req: Request, res: Response): Promise<void> {
