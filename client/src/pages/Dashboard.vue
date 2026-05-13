@@ -111,11 +111,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import api from '@/api/axios'
+import { useNotificationStore } from '@/stores/notification'
 import Header from '@/components/layout/Header.vue'
 
+const notification = useNotificationStore()
 const stats = ref({ totalEmployees: 0, activeVacations: 0, pendingRequests: 0 })
 const events = ref<any[]>([])
 const birthdays = ref<any[]>([])
+const loading = ref(false)
 const currentMonth = ref(new Date().getMonth())
 const currentYear = ref(new Date().getFullYear())
 
@@ -187,6 +190,7 @@ const prevMonth = () => { if (currentMonth.value === 0) { currentMonth.value = 1
 const nextMonth = () => { if (currentMonth.value === 11) { currentMonth.value = 0; currentYear.value++ } else currentMonth.value++ }
 
 const loadData = async () => {
+  loading.value = true
   try {
     const [s, e, b] = await Promise.all([
       api.get('/admin/dashboard/stats'),
@@ -199,7 +203,16 @@ const loadData = async () => {
       const d = new Date(item.birth_date || item.fecha_nacimiento)
       return { ...item, day: d.getUTCDate(), month: d.toLocaleDateString('es-MX', { month: 'short' }) }
     })
-  } catch (err) { console.error(err) }
+  } catch (err: any) {
+    console.error('Error loading dashboard:', err)
+    if (err.response?.status === 403) {
+      notification.error('Sin acceso al dashboard. Contacta al administrador.')
+    } else if (err.response?.status === 401) {
+      notification.error('Sesión expirada. Inicia sesión nuevamente.')
+    }
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(loadData)

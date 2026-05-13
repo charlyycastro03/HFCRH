@@ -74,17 +74,18 @@ export async function calculateRequest(req: Request, res: Response): Promise<voi
 }
 
 export async function createVacationRequest(req: Request, res: Response): Promise<void> {
-  const { employee_id, request_date, start_date, end_date, days_requested, return_date, status, comments, type } = req.body;
+  const { employee_id, request_date, start_date, end_date, days_requested, return_date, status, comments, type, descansos, descanso_dates } = req.body;
   const requestType = type || 'VACATION';
 
   try {
     const db = await getDb();
-    const [employees] = await db.query<any[]>('SELECT name, vacation_days_available, es_arquitecto FROM employees WHERE id = ?', [employee_id]);
+    const [employees] = await db.query<any[]>('SELECT name, vacation_days_available, es_arquitecto, work_days_per_week FROM employees WHERE id = ?', [employee_id]);
     if (!employees.length) {
       res.status(404).json({ msg: 'Empleado no encontrado' });
       return;
     }
     const emp = employees[0];
+    const workDays = emp.work_days_per_week ?? (emp.es_arquitecto ? 5 : 6);
 
     if (requestType === 'REST_DAY') {
       if (!emp.es_arquitecto) {
@@ -108,11 +109,26 @@ export async function createVacationRequest(req: Request, res: Response): Promis
       return;
     }
 
+    const empName = emp.name;
     await db.query(
       `INSERT INTO vacation_requests (employee_id, employee_name, request_date, start_date, end_date, days_requested, status, comments, type)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [employee_id, emp.name, request_date || new Date(), start_date, end_date, days_requested, status || 'APPROVED', comments, requestType]
+      [employee_id, empName, request_date || new Date(), start_date, end_date, days_requested, status || 'APPROVED', comments, requestType]
     );
+
+    if (emp.es_arquitecto && descansos && descanso_dates && descansos.length > 0 && requestType === 'VACATION') {
+      for (let i = 0; i < descansos.length; i++) {
+        const dDate = descanso_dates[i]
+        if (dDate) {
+          const dCount = calculateBusinessDays(dDate, dDate, workDays)
+          await db.query(
+            `INSERT INTO vacation_requests (employee_id, employee_name, request_date, start_date, end_date, days_requested, status, comments, type)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [employee_id, empName, new Date(), dDate, dDate, dCount, 'APPROVED', 'Descanso arquitecto - ' + descansos[i], 'REST_DAY']
+          )
+        }
+      }
+    }
 
     if ((status === 'APPROVED' || !status) && requestType === 'VACATION') {
       await db.query('UPDATE employees SET vacation_days_available = vacation_days_available - ? WHERE id = ?', [days_requested, employee_id]);

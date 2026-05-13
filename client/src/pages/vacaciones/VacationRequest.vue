@@ -480,65 +480,73 @@ const submit = async () => {
 }
 
 const printRequest = (item: any) => {
-  const printContent = document.createElement('div')
-  printContent.innerHTML = `<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; background: #fff; color: #1a1a2e; }
-.header { text-align: center; border-bottom: 3px solid #6366F1; padding-bottom: 20px; margin-bottom: 28px; }
-.header h1 { font-size: 26px; color: #6366F1; letter-spacing: 3px; margin-bottom: 4px; }
-.header p { color: #666; font-size: 12px; }
-.separator { height: 2px; background: linear-gradient(90deg, #6366F1, #F97316); margin: 20px 0; border: none; }
-.info-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-.info-table td { padding: 10px 14px; border-bottom: 1px solid #eee; }
-.info-table td:first-child { font-weight: 600; color: #555; width: 140px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
-.info-table td:last-child { color: #1a1a2e; font-size: 13px; }
-.badge { display: inline-block; padding: 3px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; }
-.badge-APPROVED { background: #dcfce7; color: #16a34a; }
-.badge-PENDING { background: #fef3c7; color: #d97706; }
-.badge-REJECTED { background: #fee2e2; color: #dc2626; }
-.signatures { display: flex; gap: 40px; margin-top: 36px; }
-.sig-block { text-align: center; flex: 1; }
-.sig-line { border-bottom: 1px solid #333; padding-bottom: 44px; margin-bottom: 6px; }
-.sig-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: .5px; }
-.footer { text-align: center; margin-top: 36px; padding-top: 14px; border-top: 1px solid #eee; color: #999; font-size: 10px; }
-@media print { body { padding: 20px; } }
-</style>
-<div class="header">
-  <h1>HFC CONSTRUCCIONES</h1>
-  <p>Solicitud de ${item.type === 'VACATION' ? 'Vacaciones' : 'Día de Descanso'} · Sistema de Gestión RH</p>
-</div>
-<table class="info-table">
-  <tr><td>Folio</td><td>#${item.id}</td></tr>
-  <tr><td>Empleado</td><td><strong>${item.employee_name || item.name || 'N/A'}</strong></td></tr>
-  <tr><td>Fecha Solicitud</td><td>${new Date(item.request_date).toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</td></tr>
-  <tr><td>Período</td><td>${new Date(item.start_date).toLocaleDateString('es-MX')} — ${new Date(item.end_date).toLocaleDateString('es-MX')}</td></tr>
-  <tr><td>Días</td><td>${item.days_requested}</td></tr>
-  <tr><td>Tipo</td><td><span class="badge badge-${item.status}">${item.type === 'VACATION' ? 'Vacaciones' : 'Día de Descanso'}</span></td></tr>
-  <tr><td>Estado</td><td><span class="badge badge-${item.status}">${statusLabel(item.status)}</span></td></tr>
-  ${item.comments ? `<tr><td>Motivo</td><td>${item.comments}</td></tr>` : ''}
-</table>
-<hr class="separator">
-<div class="signatures">
-  <div class="sig-block">
-    <div class="sig-line"></div>
-    <div class="sig-label">Firma del Colaborador</div>
-  </div>
-  <div class="sig-block">
-    <div class="sig-line"></div>
-    <div class="sig-label">Vo.Bo. Recursos Humanos</div>
-  </div>
-</div>
-<div class="footer">
-  <p>Portal RH · HFC Construcciones · ${new Date().toLocaleDateString('es-MX')} · Folio #${item.id}</p>
-</div>`
+  const empName = item.employee_name || employeeInfo.value?.name || 'N/A'
+  const styles = `
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; background: #fff; color: #1a1a2e; }
+    .header { text-align: center; border-bottom: 3px solid #6366F1; padding-bottom: 20px; margin-bottom: 28px; }
+    .header h1 { font-size: 26px; color: #6366F1; letter-spacing: 3px; margin-bottom: 4px; }
+    .header p { color: #666; font-size: 12px; }
+    .separator { height: 2px; background: linear-gradient(90deg, #6366F1, #F97316); margin: 20px 0; border: none; }
+    .info-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+    .info-table td { padding: 10px 14px; border-bottom: 1px solid #eee; }
+    .info-table td:first-child { font-weight: 600; color: #555; width: 140px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+    .info-table td:last-child { color: #1a1a2e; font-size: 13px; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; }
+    .badge-APPROVED { background: #dcfce7; color: #16a34a; }
+    .badge-PENDING { background: #fef3c7; color: #d97706; }
+    .badge-REJECTED { background: #fee2e2; color: #dc2626; }
+    .signatures { display: flex; gap: 40px; margin-top: 36px; }
+    .sig-block { text-align: center; flex: 1; }
+    .sig-line { border-bottom: 1px solid #333; padding-bottom: 44px; margin-bottom: 6px; }
+    .sig-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: .5px; }
+    .footer { text-align: center; margin-top: 36px; padding-top: 14px; border-top: 1px solid #eee; color: #999; font-size: 10px; }
+    @media print { body { padding: 20px; } }
+  `
 
-  const printWindow = window.open('', '_blank')
-  if (!printWindow) return
-  printWindow.document.body.appendChild(printContent)
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><title>Solicitud #${item.id} - HFC</title><style>${styles}</style></head>
+    <body>
+      <div class="header">
+        <h1>HFC CONSTRUCCIONES</h1>
+        <p>Solicitud de ${item.type === 'VACATION' ? 'Vacaciones' : 'Día de Descanso'} · Sistema de Gestión RH</p>
+      </div>
+      <table class="info-table">
+        <tr><td>Folio</td><td>#${item.id}</td></tr>
+        <tr><td>Empleado</td><td><strong>${empName}</strong></td></tr>
+        <tr><td>Fecha Solicitud</td><td>${new Date(item.request_date).toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</td></tr>
+        <tr><td>Período</td><td>${new Date(item.start_date).toLocaleDateString('es-MX')} — ${new Date(item.end_date).toLocaleDateString('es-MX')}</td></tr>
+        <tr><td>Días</td><td>${item.days_requested}</td></tr>
+        <tr><td>Tipo</td><td><span class="badge badge-${item.status}">${item.type === 'VACATION' ? 'Vacaciones' : 'Día de Descanso'}</span></td></tr>
+        <tr><td>Estado</td><td><span class="badge badge-${item.status}">${statusLabel(item.status)}</span></td></tr>
+        ${item.comments ? `<tr><td>Motivo</td><td>${item.comments}</td></tr>` : ''}
+      </table>
+      <hr class="separator">
+      <div class="signatures">
+        <div class="sig-block"><div class="sig-line"></div><div class="sig-label">Firma del Colaborador</div></div>
+        <div class="sig-block"><div class="sig-line"></div><div class="sig-label">Vo.Bo. Recursos Humanos</div></div>
+      </div>
+      <div class="footer"><p>Portal RH · HFC Construcciones · ${new Date().toLocaleDateString('es-MX')} · Folio #${item.id}</p></div>
+    </body>
+    </html>
+  `
+
+  const printWindow = window.open('', '_blank', 'width=800,height=600')
+  if (!printWindow) { notification.error('Bloquea el popup para imprimir'); return }
+  printWindow.document.open()
+  printWindow.document.write(html)
   printWindow.document.close()
-  printWindow.onload = () => { printWindow.print(); printWindow.close() }
-  printWindow.onerror = () => { printWindow.print(); printWindow.close() }
-  setTimeout(() => { try { printWindow.print(); printWindow.close() } catch {} }, 500)
+  printWindow.onload = () => { printWindow.focus(); printWindow.print() }
+  printWindow.onerror = () => {
+    printWindow.document.body.innerHTML = html
+    printWindow.print()
+  }
+  setTimeout(() => {
+    try { if (!printWindow.closed) { printWindow.focus(); printWindow.print() } }
+    catch { notification.error('No se pudo abrir la ventana de impresión') }
+  }, 800)
 }
 
 const uploadPdf = (item: any) => { uploadTarget.value = item; fileInput.value?.click() }
