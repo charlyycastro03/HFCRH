@@ -73,7 +73,7 @@ export class VacationPeriodService {
 
     const currentPeriod = periods[0];
     const [requestRows] = await db.query<any[]>(
-      'SELECT SUM(days_requested) as total_requested FROM vacation_requests WHERE employee_id = ? AND status = "APPROVED"',
+      'SELECT SUM(days_requested) as total_requested FROM vacation_requests WHERE employee_id = ? AND status != "REJECTED"',
       [employeeId]
     );
     const historicTaken = parseFloat(requestRows[0]?.total_requested || 0);
