@@ -437,6 +437,7 @@ const loadEmployeeInfo = async () => {
 
 const calculate = async () => {
   if (!startDate.value || !endDate.value || !selectedEmployeeId.value) return
+  errorMsg.value = ''
   try {
     const { data } = await api.post('/vacations/calculate', {
       employeeId: selectedEmployeeId.value,
@@ -444,8 +445,17 @@ const calculate = async () => {
       endDate: endDate.value,
     })
     calculatedDays.value = data.days_requested
-    returnDate.value = new Date(data.return_date).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })
-  } catch (e) { console.error(e) }
+    const d = new Date(data.return_date)
+    const dayName = d.toLocaleDateString('es-MX', { weekday: 'long' })
+    returnDate.value = `${dayName}, ${d.getDate()} de ${d.toLocaleDateString('es-MX', { month: 'long' })} de ${d.getFullYear()}`
+    if (data.days_requested === 0) {
+      errorMsg.value = 'No hay días laborables en el rango seleccionado (fines de semana o festivos)'
+    }
+  } catch (e: any) {
+    console.error(e)
+    errorMsg.value = e.response?.data?.msg || 'Error al calcular días'
+    notification.error(errorMsg.value)
+  }
 }
 
 const submit = async () => {
