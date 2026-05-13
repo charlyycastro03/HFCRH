@@ -15,27 +15,36 @@ export class VacationPeriodService {
     const dayDiff = today.getDate() - hireDate.getDate();
     if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) yearsCompleted--;
 
-    if (yearsCompleted <= 0) {
+    if (yearsCompleted < 1) {
       await this.syncProporcionalPeriod(employeeId, hireDate, today);
       return;
     }
 
     for (let year = 1; year <= yearsCompleted; year++) {
-      await db.query('CALL sp_generate_vacation_period(?, ?, ?)', [
-        employeeId,
-        hireDate.toISOString().split('T')[0],
-        year,
-      ]);
+      const daysGranted = getDaysGrantedByYear(year);
+      const anniversary = new Date(hireDate);
+      anniversary.setFullYear(anniversary.getFullYear() + year);
+      const startDate = new Date(anniversary);
+      startDate.setFullYear(startDate.getFullYear() - 1);
+      const expiryDate = new Date(anniversary);
+
+      await db.query(
+        `INSERT INTO vacation_periods (employee_id, period_year, start_date, end_date, expiry_date, days_granted)
+         VALUES (?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE days_granted = VALUES(days_granted)`,
+        [employeeId, year, startDate.toISOString().split('T')[0], anniversary.toISOString().split('T')[0], expiryDate.toISOString().split('T')[0], daysGranted]
+      );
     }
   }
 
   private async syncProporcionalPeriod(employeeId: number, hireDate: Date, today: Date): Promise<void> {
     const db = await getDb();
     const monthsWorked =
-      (today.getFullYear() - hireDate.getFullYear()) * 12 + (today.getMonth() - hireDate.getMonth());
-    const daysGranted = Math.max(0, monthsWorked);
-    if (daysGranted === 0) return;
+      (today.getFullYear() - hireDate.getFullYear()) * 12 + (today.getMonth() - hireDate.getMonth()) +
+      (today.getDate() >= hireDate.getDate() ? 0 : -1);
+    if (monthsWorked <= 0) return;
 
+    const daysGranted = Math.round(12 * monthsWorked / 12);
     const nextAnniversary = new Date(hireDate);
     nextAnniversary.setFullYear(nextAnniversary.getFullYear() + 1);
 

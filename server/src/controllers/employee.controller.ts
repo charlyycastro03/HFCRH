@@ -16,21 +16,17 @@ function calculateProportionalDays(hireDateStr: string | null): number {
 
   const hireDate = new Date(hireDateStr);
   const today = new Date();
-
   if (hireDate > today) return 0;
 
   let years = today.getFullYear() - hireDate.getFullYear();
   let months = today.getMonth() - hireDate.getMonth();
-
   if (today.getDate() < hireDate.getDate()) months--;
   if (months < 0) { months += 12; years--; }
-
   years = Math.max(0, years);
 
   const totalMonths = years * 12 + months;
-  const daysPerYear = getDaysGrantedByYear(years);
-  const proportionalDays = Math.round((totalMonths / 12) * daysPerYear);
-
+  const fullYearDays = getDaysGrantedByYear(Math.max(1, years));
+  const proportionalDays = Math.round((totalMonths / 12) * fullYearDays);
   return Math.max(0, proportionalDays);
 }
 
