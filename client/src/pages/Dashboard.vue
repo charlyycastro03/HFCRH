@@ -208,7 +208,11 @@ const loadData = async () => {
     if (err.response?.status === 403) {
       notification.error('Sin acceso al dashboard. Contacta al administrador.')
     } else if (err.response?.status === 401) {
-      notification.error('Sesión expirada. Inicia sesión nuevamente.')
+      notification.error('Sesión expirada. Redirigiendo...')
+    } else if (err.response?.status === 500) {
+      notification.error('Error del servidor. Verifica conexión a BD.')
+    } else {
+      notification.error('Error al cargar dashboard. Verifica conexión.')
     }
   } finally {
     loading.value = false

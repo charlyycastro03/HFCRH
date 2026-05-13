@@ -130,7 +130,7 @@ export async function createVacationRequest(req: Request, res: Response): Promis
       }
     }
 
-    if ((status === 'APPROVED' || !status) && requestType === 'VACATION') {
+    if (requestType === 'VACATION') {
       await db.query('UPDATE employees SET vacation_days_available = vacation_days_available - ? WHERE id = ?', [days_requested, employee_id]);
     }
 
@@ -204,9 +204,9 @@ export async function deleteRequest(req: Request, res: Response): Promise<void> 
     }
 
     const request = requests[0];
-    if (request.status === 'APPROVED' && request.type === 'VACATION') {
+    if (request.type === 'VACATION') {
       await db.query(
-        'UPDATE employees SET vacation_days_available = vacation_days_available + ?, vacation_days_used = vacation_days_used - ? WHERE id = ?',
+        'UPDATE employees SET vacation_days_available = vacation_days_available + ?, vacation_days_used = GREATEST(vacation_days_used - ?, 0) WHERE id = ?',
         [request.days_requested, request.days_requested, request.employee_id]
       );
     }

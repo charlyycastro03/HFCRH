@@ -409,8 +409,8 @@ const seniority = computed(() => {
 const formatDate = (d: string) => d ? new Date(d).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'
 const formatDateLong = (d: string) => d ? new Date(d).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' }) : '-'
 const formatShort = (d: string) => d ? new Date(d).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) : '-'
-const statusColor = (s: string) => s === 'APPROVED' ? 'success' : s === 'REJECTED' ? 'error' : 'warning'
-const statusLabel = (s: string) => s === 'APPROVED' ? 'Aprobada' : s === 'REJECTED' ? 'Rechazada' : 'Pendiente'
+const statusColor = (s: string) => s === 'APPROVED' ? 'success' : s === 'FIRMADO' ? 'success' : s === 'REJECTED' ? 'error' : 'warning'
+const statusLabel = (s: string) => s === 'APPROVED' ? 'Aprobada' : s === 'FIRMADO' ? 'Lista' : s === 'REJECTED' ? 'Rechazada' : 'Pendiente'
 
 const toggleDescanso = (n: string) => {
   const idx = descansos.value.indexOf(n)
@@ -494,6 +494,7 @@ const printRequest = (item: any) => {
     .info-table td:last-child { color: #1a1a2e; font-size: 13px; }
     .badge { display: inline-block; padding: 3px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; }
     .badge-APPROVED { background: #dcfce7; color: #16a34a; }
+    .badge-FIRMADO { background: #dcfce7; color: #16a34a; }
     .badge-PENDING { background: #fef3c7; color: #d97706; }
     .badge-REJECTED { background: #fee2e2; color: #dc2626; }
     .signatures { display: flex; gap: 40px; margin-top: 36px; }
