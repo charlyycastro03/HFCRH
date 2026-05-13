@@ -39,7 +39,11 @@ export async function getEmployees(req: Request, res: Response): Promise<void> {
               es_arquitecto, work_days_per_week, user_id
        FROM employees ORDER BY name ASC`
     );
-    res.json(results);
+    const fixed = results.map((e: any) => ({
+      ...e,
+      vacation_days_available: calculateProportionalDays(e.hire_date),
+    }));
+    res.json(fixed);
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: 'Error al obtener empleados' });
