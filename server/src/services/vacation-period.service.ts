@@ -5,7 +5,7 @@ import { VacationSummary, User } from '../types';
 export class VacationPeriodService {
   async syncEmployeePeriods(employeeId: number): Promise<void> {
     const db = await getDb();
-    const [rows] = await db.query<any[]>('SELECT hire_date FROM employees WHERE id = ?', [employeeId]);
+    const [rows] = await db.query<any[]>('SELECT hire_date, vacation_days_available FROM employees WHERE id = ?', [employeeId]);
     if (!rows.length) throw new Error(`Empleado ${employeeId} no encontrado`);
 
     const hireDate = new Date(rows[0].hire_date);
@@ -18,34 +18,41 @@ export class VacationPeriodService {
     await db.query('DELETE FROM vacation_movements WHERE period_id IN (SELECT id FROM vacation_periods WHERE employee_id = ?)', [employeeId]);
     await db.query('DELETE FROM vacation_periods WHERE employee_id = ?', [employeeId]);
 
+    let latestDays = 0;
+
     if (yearsCompleted < 1) {
       const totalMonths = (today.getFullYear() - hireDate.getFullYear()) * 12 + (today.getMonth() - hireDate.getMonth()) + (today.getDate() >= hireDate.getDate() ? 0 : -1);
       if (totalMonths <= 0) return;
-      const daysGranted = Math.round(12 * totalMonths / 12);
+      latestDays = Math.round(12 * totalMonths / 12);
       const nextAnniversary = new Date(hireDate);
       nextAnniversary.setFullYear(nextAnniversary.getFullYear() + 1);
       await db.query(
         `INSERT INTO vacation_periods (employee_id, period_year, start_date, end_date, expiry_date, days_granted)
          VALUES (?, 0, ?, ?, ?, ?)`,
-        [employeeId, hireDate.toISOString().split('T')[0], nextAnniversary.toISOString().split('T')[0], nextAnniversary.toISOString().split('T')[0], daysGranted]
+        [employeeId, hireDate.toISOString().split('T')[0], nextAnniversary.toISOString().split('T')[0], nextAnniversary.toISOString().split('T')[0], latestDays]
       );
-      return;
+    } else {
+      for (let year = 1; year <= yearsCompleted; year++) {
+        const daysGranted = getDaysGrantedByYear(year);
+        latestDays = daysGranted;
+        const anniversary = new Date(hireDate);
+        anniversary.setFullYear(anniversary.getFullYear() + year);
+        const startDate = new Date(anniversary);
+        startDate.setFullYear(startDate.getFullYear() - 1);
+        const expiryDate = new Date(anniversary);
+
+        await db.query(
+          `INSERT INTO vacation_periods (employee_id, period_year, start_date, end_date, expiry_date, days_granted)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [employeeId, year, startDate.toISOString().split('T')[0], anniversary.toISOString().split('T')[0], expiryDate.toISOString().split('T')[0], daysGranted]
+        );
+      }
     }
 
-    for (let year = 1; year <= yearsCompleted; year++) {
-      const daysGranted = getDaysGrantedByYear(year);
-      const anniversary = new Date(hireDate);
-      anniversary.setFullYear(anniversary.getFullYear() + year);
-      const startDate = new Date(anniversary);
-      startDate.setFullYear(startDate.getFullYear() - 1);
-      const expiryDate = new Date(anniversary);
-
-      await db.query(
-        `INSERT INTO vacation_periods (employee_id, period_year, start_date, end_date, expiry_date, days_granted)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [employeeId, year, startDate.toISOString().split('T')[0], anniversary.toISOString().split('T')[0], expiryDate.toISOString().split('T')[0], daysGranted]
-      );
-    }
+    await db.query(
+      'UPDATE employees SET vacation_days_available = ? WHERE id = ? AND vacation_days_available != ?',
+      [latestDays, employeeId, latestDays]
+    );
   }
 
   async getEmployeeVacationSummary(employeeId: number): Promise<VacationSummary> {
