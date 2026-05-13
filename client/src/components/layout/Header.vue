@@ -1,13 +1,13 @@
 <template>
-  <v-app-bar elevation="0" class="px-4" style="background: #1A223F !important; border-bottom: 1px solid #2e3852;">
-    <v-app-bar-title class="text-h6 font-weight-bold">
-      {{ title }}
-    </v-app-bar-title>
-    <v-spacer />
-    <v-chip variant="tonal" color="primary" size="small" class="mr-2">
-      {{ userRole }}
-    </v-chip>
-  </v-app-bar>
+  <div class="page-header">
+    <div class="header-left">
+      <div class="page-title">{{ title }}</div>
+      <div class="page-breadcrumb">{{ breadcrumb }}</div>
+    </div>
+    <div class="header-right">
+      <span class="user-role-badge">{{ userRole }}</span>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -18,26 +18,54 @@ import { useAuthStore } from '@/stores/auth'
 const route = useRoute()
 const authStore = useAuthStore()
 
-const title = computed(() => {
-  const name = route.name?.toString() || ''
-  const titles: Record<string, string> = {
-    Dashboard: 'Panel Principal',
-    UserManagement: 'Gestión de Usuarios',
-    EmployeeManagement: 'Gestión de Empleados',
-    VacationRequest: 'Solicitar Vacaciones',
-    MyVacations: 'Mis Vacaciones',
-    AuthorizationCenter: 'Centro de Autorizaciones',
-    TeamCalendar: 'Calendario del Equipo',
-    Reports: 'Reportes',
-    VacationAlerts: 'Alertas de Vacaciones',
-  }
-  return titles[name] || name
-})
+const titleMap: Record<string, { title: string; breadcrumb: string }> = {
+  Dashboard: { title: 'Bienvenido', breadcrumb: 'Panel principal' },
+  UserManagement: { title: 'Usuarios', breadcrumb: 'Administración' },
+  EmployeeManagement: { title: 'Empleados', breadcrumb: 'Administración' },
+  VacationRequest: { title: 'Vacaciones', breadcrumb: 'Solicitar' },
+  Reports: { title: 'Reportes', breadcrumb: 'Consultas' },
+}
+
+const info = computed(() => titleMap[route.name?.toString() || ''] || { title: route.name?.toString() || '', breadcrumb: '' })
+const title = computed(() => info.value.title)
+const breadcrumb = computed(() => info.value.breadcrumb)
 
 const userRole = computed(() => {
   const r = authStore.user?.role
-  if (r === 'admin') return 'Admin'
-  if (r === 'hr') return 'RH'
-  return 'User'
+  if (r === 'admin') return 'Administrador'
+  if (r === 'hr') return 'Recursos Humanos'
+  return 'Colaborador'
 })
 </script>
+
+<style scoped>
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.page-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #F1F5F9;
+  line-height: 1.2;
+}
+
+.page-breadcrumb {
+  font-size: 13px;
+  color: #64748B;
+  margin-top: 4px;
+}
+
+.user-role-badge {
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366F1;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+</style>

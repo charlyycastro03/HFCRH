@@ -3,6 +3,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { es } from 'vuetify/locale'
+import '@mdi/font/css/materialdesignicons.css'
 
 export default createVuetify({
   components,
@@ -12,21 +13,54 @@ export default createVuetify({
     messages: { es },
   },
   theme: {
-    defaultTheme: 'dark',
+    defaultTheme: 'hfcDark',
     themes: {
-      dark: {
+      hfcDark: {
         dark: true,
         colors: {
-          background: '#111936',
-          surface: '#1A223F',
-          primary: '#635BFF',
-          secondary: '#13DEB9',
-          info: '#03c9d7',
-          success: '#13DEB9',
-          warning: '#FFAE1F',
-          error: '#FA896B',
+          background: '#0F172A',
+          surface: '#1E293B',
+          surfaceVariant: '#334155',
+          primary: '#6366F1',
+          secondary: '#F97316',
+          info: '#38BDF8',
+          success: '#22C55E',
+          warning: '#F59E0B',
+          error: '#EF4444',
+          'on-background': '#F1F5F9',
+          'on-surface': '#F1F5F9',
+          'on-primary': '#FFFFFF',
+          'on-secondary': '#FFFFFF',
         },
       },
+    },
+  },
+  defaults: {
+    VBtn: {
+      rounded: 'xl',
+      elevation: 0,
+    },
+    VCard: {
+      rounded: 'xl',
+      elevation: 0,
+    },
+    VTextField: {
+      variant: 'outlined',
+      density: 'comfortable',
+      rounded: 'lg',
+    },
+    VSelect: {
+      variant: 'outlined',
+      density: 'comfortable',
+      rounded: 'lg',
+    },
+    VAutocomplete: {
+      variant: 'outlined',
+      density: 'comfortable',
+      rounded: 'lg',
+    },
+    VChip: {
+      rounded: 'lg',
     },
   },
 })

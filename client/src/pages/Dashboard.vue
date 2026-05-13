@@ -1,147 +1,157 @@
 <template>
   <div>
-    <h1 class="text-h4 font-weight-bold text-white mb-1">Panel Principal</h1>
-    <p class="text-body-1 text-medium-emphasis mb-6">Resumen general de HFC Construcciones</p>
+    <Header />
 
-    <v-row>
-      <v-col cols="12" md="4">
-        <v-card class="overflow-hidden" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-          <v-card-text class="text-white pa-6">
-            <div class="d-flex justify-space-between">
-              <div>
-                <div class="text-caption font-weight-medium opacity-75">Total Empleados</div>
-                <div class="text-h3 font-weight-bold">{{ stats.totalEmployees || 0 }}</div>
-              </div>
-              <v-avatar color="white" variant="tonal" size="50" rounded>
-                <v-icon size="30">mdi-account-group</v-icon>
-              </v-avatar>
+    <div class="stats-grid">
+      <div
+        v-for="(stat, i) in statsCards"
+        :key="stat.label"
+        class="stat-card"
+        :style="{ animationDelay: `${i * 100}ms` }"
+        :class="`stat-card--${stat.color}`"
+      >
+        <div class="stat-icon-wrap">
+          <v-icon size="22">{{ stat.icon }}</v-icon>
+        </div>
+        <div class="stat-body">
+          <div class="stat-value">{{ stat.value }}</div>
+          <div class="stat-label">{{ stat.label }}</div>
+        </div>
+        <div class="stat-trend" :class="stat.trend > 0 ? 'up' : 'down'">
+          <v-icon size="14">{{ stat.trend > 0 ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="dash-calendar">
+        <div class="dash-section-header">
+          <v-icon size="18" class="mr-2">mdi-calendar-month</v-icon>
+          Calendario del Mes
+        </div>
+        <div class="mini-calendar">
+          <div class="cal-header">
+            <v-btn icon="mdi-chevron-left" size="x-small" variant="text" @click="prevMonth" />
+            <span class="cal-month">{{ monthName }} {{ currentYear }}</span>
+            <v-btn icon="mdi-chevron-right" size="x-small" variant="text" @click="nextMonth" />
+          </div>
+          <div class="cal-grid">
+            <div v-for="d in dayNames" :key="d" class="cal-day-name">{{ d }}</div>
+            <div
+              v-for="(day, i) in calendarMatrix"
+              :key="i"
+              class="cal-cell"
+              :class="{
+                'other-month': !day.isCurrent,
+                'is-today': isToday(day.date),
+                'has-events': day.events.length > 0,
+              }"
+            >
+              <span>{{ day.num }}</span>
+              <div v-if="day.events.length" class="cal-dot" />
             </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
+          </div>
+        </div>
+      </div>
 
-      <v-col cols="12" md="4">
-        <v-card class="overflow-hidden" style="background: linear-gradient(to right, #00b09b, #96c93d);">
-          <v-card-text class="text-white pa-6">
-            <div class="d-flex justify-space-between">
-              <div>
-                <div class="text-caption font-weight-medium opacity-75">Vacaciones Firmadas</div>
-                <div class="text-h3 font-weight-bold">{{ stats.activeVacations || 0 }}</div>
-              </div>
-              <v-avatar color="white" variant="tonal" size="50" rounded>
-                <v-icon size="30">mdi-file-check</v-icon>
-              </v-avatar>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-
-      <v-col cols="12" md="4">
-        <v-card class="overflow-hidden" style="background: linear-gradient(to right, #ff5f6d, #ffc371);">
-          <v-card-text class="text-white pa-6">
-            <div class="d-flex justify-space-between">
-              <div>
-                <div class="text-caption font-weight-medium opacity-75">Faltan Firmas</div>
-                <div class="text-h3 font-weight-bold">{{ stats.pendingRequests || 0 }}</div>
-              </div>
-              <v-avatar color="white" variant="tonal" size="50" rounded>
-                <v-icon size="30">mdi-file-alert</v-icon>
-              </v-avatar>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <v-row class="mt-4">
-      <v-col cols="12" md="8">
-        <v-card class="rounded-lg card-dark">
-          <v-card-title class="pa-4 d-flex justify-space-between align-center border-b">
-            <span class="font-weight-bold">Calendario de Ausencias</span>
-          </v-card-title>
-          <v-card-text class="pa-4">
-            <v-row v-for="(week, wi) in calendarMatrix" :key="wi" no-gutters>
-              <v-col v-for="(day, di) in week" :key="di" cols="12/7" class="pa-1 text-center" :class="{ 'text-medium-emphasis': !day.isCurrent }">
-                <div class="text-caption mb-1" :class="{ 'font-weight-bold text-primary': isToday(day.date) }">
-                  {{ day.num }}
-                </div>
-                <div v-for="ev in day.events" :key="ev.id">
-                  <v-chip color="primary" size="x-small" class="text-truncate" style="max-width: 100%;">
-                    {{ ev.title }}
-                  </v-chip>
-                </div>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
-      </v-col>
-
-      <v-col cols="12" md="4">
-        <v-card class="rounded-lg card-dark mb-4">
-          <v-card-title class="pa-4 font-weight-bold border-b">Accesos Rápidos</v-card-title>
-          <v-card-text class="pa-4">
-            <v-btn block color="primary" class="mb-3" to="/vacaciones/solicitar">
-              <v-icon start>mdi-plus</v-icon> Nueva Solicitud
+      <div class="dash-right">
+        <div class="dash-quick">
+          <div class="dash-section-header">
+            <v-icon size="18" class="mr-2">mdi-flash</v-icon>
+            Accesos Rápidos
+          </div>
+          <div class="quick-grid">
+            <v-btn
+              v-for="q in quickActions"
+              :key="q.label"
+              :to="q.path"
+              variant="tonal"
+              :color="q.color"
+              size="large"
+              block
+              rounded="xl"
+              class="quick-btn"
+            >
+              <v-icon start>{{ q.icon }}</v-icon>
+              {{ q.label }}
             </v-btn>
-            <v-btn block color="secondary" class="mb-3" to="/admin/employees">
-              <v-icon start>mdi-account-plus</v-icon> Registrar Empleado
-            </v-btn>
-            <v-btn block color="info" to="/admin/users">
-              <v-icon start>mdi-account-cog</v-icon> Gestionar Usuarios
-            </v-btn>
-          </v-card-text>
-        </v-card>
+          </div>
+        </div>
 
-        <v-card class="rounded-lg card-dark">
-          <v-card-title class="pa-4 font-weight-bold border-b">
-            <v-icon color="pink" class="mr-2">mdi-party-popper</v-icon>
-            Próximos Cumpleaños
-          </v-card-title>
-          <v-card-text class="pa-4">
-            <div v-if="birthdays.length">
-              <v-list-item v-for="b in birthdays" :key="b.id" class="px-0">
-                <template v-slot:prepend>
-                  <v-avatar size="32" color="pink" class="mr-2">{{ b.day }}</v-avatar>
-                </template>
-                <v-list-item-title class="font-weight-bold">{{ b.name }}</v-list-item-title>
-                <v-list-item-subtitle>{{ b.department }}</v-list-item-subtitle>
-              </v-list-item>
+        <div class="dash-birthdays">
+          <div class="dash-section-header">
+            <v-icon size="18" color="pink" class="mr-2">mdi-party-popper</v-icon>
+            Cumpleaños del Mes
+          </div>
+          <div v-if="birthdays.length" class="birthday-list">
+            <div v-for="b in birthdays" :key="b.id" class="birthday-item">
+              <div class="birthday-date">
+                <span class="birthday-day">{{ b.day }}</span>
+                <span class="birthday-month">{{ b.month }}</span>
+              </div>
+              <div class="birthday-info">
+                <div class="birthday-name">{{ b.name }}</div>
+                <div class="birthday-dept">{{ b.department }}</div>
+              </div>
+              <div class="birthday-icon">
+                <v-icon size="16" color="pink">mdi-cake-variant</v-icon>
+              </div>
             </div>
-            <div v-else class="text-center py-4 text-medium-emphasis text-caption">
-              No hay cumpleaños este mes
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
+          </div>
+          <div v-else class="empty-state">
+            <v-icon size="32" color="#334155">mdi-calendar-blank</v-icon>
+            <span>Sin cumpleaños este mes</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import api from '@/api/axios'
-import type { DashboardStats, CalendarEvent } from '@/types'
+import Header from '@/components/layout/Header.vue'
 
-const stats = ref<DashboardStats>({ totalEmployees: 0, activeVacations: 0, pendingRequests: 0 })
-const events = ref<CalendarEvent[]>([])
+const stats = ref({ totalEmployees: 0, activeVacations: 0, pendingRequests: 0 })
+const events = ref<any[]>([])
 const birthdays = ref<any[]>([])
 const currentMonth = ref(new Date().getMonth())
 const currentYear = ref(new Date().getFullYear())
 
-const loadData = async () => {
-  try {
-    const [s, e, b] = await Promise.all([
-      api.get('/admin/dashboard/stats'),
-      api.get('/admin/dashboard/events'),
-      api.get('/admin/birthdays'),
-    ])
-    stats.value = s.data
-    events.value = e.data
-    birthdays.value = b.data
-  } catch (err) {
-    console.error(err)
-  }
-}
+const dayNames = ['D', 'L', 'M', 'M', 'J', 'V', 'S']
+const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+const monthName = computed(() => monthNames[currentMonth.value])
+
+const quickActions = [
+  { label: 'Nueva Solicitud', icon: 'mdi-plus', path: '/vacaciones/solicitar', color: 'primary' },
+  { label: 'Registrar Empleado', icon: 'mdi-account-plus', path: '/admin/employees', color: 'secondary' },
+  { label: 'Ver Reportes', icon: 'mdi-file-chart', path: '/rh/reportes', color: 'info' },
+]
+
+const statsCards = computed(() => [
+  {
+    label: 'Total Empleados',
+    value: stats.value.totalEmployees || 0,
+    icon: 'mdi-account-group',
+    color: 'primary',
+    trend: 1,
+  },
+  {
+    label: 'Solicitudes Firmadas',
+    value: stats.value.activeVacations || 0,
+    icon: 'mdi-file-check',
+    color: 'success',
+    trend: 1,
+  },
+  {
+    label: 'Pendientes de Firmar',
+    value: stats.value.pendingRequests || 0,
+    icon: 'mdi-file-clock',
+    color: 'warning',
+    trend: -1,
+  },
+])
 
 const isToday = (d: Date) => {
   const t = new Date()
@@ -155,17 +165,13 @@ const calendarMatrix = computed(() => {
   start.setDate(start.getDate() - start.getDay())
   const rows: any[] = []
   let cur = new Date(start)
-
   for (let w = 0; w < 6; w++) {
     const week: any[] = []
     for (let d = 0; d < 7; d++) {
       const dayEvents = events.value.filter((e) => {
-        const s = new Date(e.start)
-        const en = new Date(e.end)
-        s.setHours(0, 0, 0, 0)
-        en.setHours(0, 0, 0, 0)
-        const c = new Date(cur)
-        c.setHours(0, 0, 0, 0)
+        const s = new Date(e.start); const en = new Date(e.end)
+        s.setHours(0,0,0,0); en.setHours(0,0,0,0)
+        const c = new Date(cur); c.setHours(0,0,0,0)
         return c >= s && c <= en
       })
       week.push({ num: cur.getDate(), date: new Date(cur), isCurrent: cur.getMonth() === currentMonth.value, events: dayEvents })
@@ -177,15 +183,292 @@ const calendarMatrix = computed(() => {
   return rows
 })
 
+const prevMonth = () => { if (currentMonth.value === 0) { currentMonth.value = 11; currentYear.value-- } else currentMonth.value-- }
+const nextMonth = () => { if (currentMonth.value === 11) { currentMonth.value = 0; currentYear.value++ } else currentMonth.value++ }
+
+const loadData = async () => {
+  try {
+    const [s, e, b] = await Promise.all([
+      api.get('/admin/dashboard/stats'),
+      api.get('/admin/dashboard/events'),
+      api.get('/admin/birthdays'),
+    ])
+    stats.value = s.data
+    events.value = e.data
+    birthdays.value = (b.data || []).map((item: any) => {
+      const d = new Date(item.birth_date || item.fecha_nacimiento)
+      return { ...item, day: d.getUTCDate(), month: d.toLocaleDateString('es-MX', { month: 'short' }) }
+    })
+  } catch (err) { console.error(err) }
+}
+
 onMounted(loadData)
 </script>
 
 <style scoped>
-.card-dark {
-  background: #1A223F !important;
-  border: 1px solid #2e3852;
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
 }
-.border-b {
-  border-bottom: 1px solid #2e3852;
+
+.stat-card {
+  background: #1E293B;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid rgba(255,255,255,0.05);
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.5s ease both;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+.stat-icon-wrap {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-card--primary .stat-icon-wrap { background: rgba(99,102,241,0.15); color: #6366F1; }
+.stat-card--success .stat-icon-wrap { background: rgba(34,197,94,0.15); color: #22C55E; }
+.stat-card--warning .stat-icon-wrap { background: rgba(245,158,11,0.15); color: #F59E0B; }
+
+.stat-body {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #F1F5F9;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #64748B;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.stat-trend {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-trend.up { background: rgba(34,197,94,0.1); color: #22C55E; }
+.stat-trend.down { background: rgba(239,68,68,0.1); color: #EF4444; }
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 20px;
+}
+
+.dash-calendar, .dash-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dash-calendar, .dash-quick, .dash-birthdays {
+  background: #1E293B;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.dash-section-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: #F1F5F9;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.mini-calendar {
+  width: 100%;
+}
+
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.cal-month {
+  font-size: 13px;
+  font-weight: 600;
+  color: #F1F5F9;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.cal-day-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  text-align: center;
+  padding: 6px 0;
+}
+
+.cal-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #94A3B8;
+  position: relative;
+  transition: all 0.15s;
+}
+
+.cal-cell span {
+  line-height: 1;
+}
+
+.other-month { color: #334155; }
+
+.is-today {
+  background: rgba(99,102,241,0.2);
+  color: #6366F1;
+  font-weight: 700;
+}
+
+.has-events .cal-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #F97316;
+  position: absolute;
+  bottom: 3px;
+}
+
+.cal-cell:hover {
+  background: rgba(99,102,241,0.08);
+}
+
+.quick-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quick-btn {
+  height: 44px !important;
+  font-weight: 600;
+  justify-content: flex-start;
+}
+
+.quick-btn :deep(.v-btn__content) {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.birthday-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.birthday-item:last-child { border-bottom: none; }
+
+.birthday-date {
+  width: 36px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.birthday-day {
+  font-size: 20px;
+  font-weight: 700;
+  color: #F1F5F9;
+  line-height: 1;
+  display: block;
+}
+
+.birthday-month {
+  font-size: 10px;
+  color: #64748B;
+  text-transform: uppercase;
+}
+
+.birthday-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.birthday-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #F1F5F9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.birthday-dept {
+  font-size: 11px;
+  color: #64748B;
+}
+
+.birthday-icon {
+  flex-shrink: 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 24px;
+  color: #475569;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1100px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .stat-value { font-size: 22px; }
 }
 </style>
