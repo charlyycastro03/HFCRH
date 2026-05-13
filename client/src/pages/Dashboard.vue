@@ -2,109 +2,126 @@
   <div>
     <Header />
 
-    <div class="stats-grid">
-      <div
-        v-for="(stat, i) in statsCards"
-        :key="stat.label"
-        class="stat-card"
-        :style="{ animationDelay: `${i * 100}ms` }"
-        :class="`stat-card--${stat.color}`"
-      >
-        <div class="stat-icon-wrap">
-          <v-icon size="22">{{ stat.icon }}</v-icon>
-        </div>
-        <div class="stat-body">
-          <div class="stat-value">{{ stat.value }}</div>
-          <div class="stat-label">{{ stat.label }}</div>
-        </div>
-        <div class="stat-trend" :class="stat.trend > 0 ? 'up' : 'down'">
-          <v-icon size="14">{{ stat.trend > 0 ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
-        </div>
-      </div>
+    <div v-if="loading" class="loading-container">
+      <v-progress-circular indeterminate color="primary" size="40" width="3" />
+      <div class="loading-text">Cargando dashboard...</div>
     </div>
 
-    <div class="dashboard-grid">
-      <div class="dash-calendar">
-        <div class="dash-section-header">
-          <v-icon size="18" class="mr-2">mdi-calendar-month</v-icon>
-          Calendario del Mes
-        </div>
-        <div class="mini-calendar">
-          <div class="cal-header">
-            <v-btn icon="mdi-chevron-left" size="x-small" variant="text" @click="prevMonth" />
-            <span class="cal-month">{{ monthName }} {{ currentYear }}</span>
-            <v-btn icon="mdi-chevron-right" size="x-small" variant="text" @click="nextMonth" />
+    <v-alert
+      v-else-if="loadError"
+      type="error"
+      variant="tonal"
+      closable
+      class="mb-4"
+      rounded="lg"
+      @click:close="loadError = ''"
+    >{{ loadError }}</v-alert>
+
+    <template v-if="!loading">
+      <div class="stats-grid">
+        <div
+          v-for="(stat, i) in statsCards"
+          :key="stat.label"
+          class="stat-card"
+          :style="{ animationDelay: `${i * 100}ms` }"
+          :class="`stat-card--${stat.color}`"
+        >
+          <div class="stat-icon-wrap">
+            <v-icon size="22">{{ stat.icon }}</v-icon>
           </div>
-          <div class="cal-grid">
-            <div v-for="d in dayNames" :key="d" class="cal-day-name">{{ d }}</div>
-            <div
-              v-for="(day, i) in calendarMatrix"
-              :key="i"
-              class="cal-cell"
-              :class="{
-                'other-month': !day.isCurrent,
-                'is-today': isToday(day.date),
-                'has-events': day.events.length > 0,
-              }"
-            >
-              <span>{{ day.num }}</span>
-              <div v-if="day.events.length" class="cal-dot" />
+          <div class="stat-body">
+            <div class="stat-value">{{ stat.value }}</div>
+            <div class="stat-label">{{ stat.label }}</div>
+          </div>
+          <div class="stat-trend" :class="stat.trend > 0 ? 'up' : 'down'">
+            <v-icon size="14">{{ stat.trend > 0 ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="dash-calendar">
+          <div class="dash-section-header">
+            <v-icon size="18" class="mr-2">mdi-calendar-month</v-icon>
+            Calendario del Mes
+          </div>
+          <div class="mini-calendar">
+            <div class="cal-header">
+              <v-btn icon="mdi-chevron-left" size="x-small" variant="text" @click="prevMonth" />
+              <span class="cal-month">{{ monthName }} {{ currentYear }}</span>
+              <v-btn icon="mdi-chevron-right" size="x-small" variant="text" @click="nextMonth" />
+            </div>
+            <div class="cal-grid">
+              <div v-for="d in dayNames" :key="d" class="cal-day-name">{{ d }}</div>
+              <div
+                v-for="(day, i) in calendarMatrix"
+                :key="i"
+                class="cal-cell"
+                :class="{
+                  'other-month': !day.isCurrent,
+                  'is-today': isToday(day.date),
+                  'has-events': day.events.length > 0,
+                }"
+              >
+                <span>{{ day.num }}</span>
+                <div v-if="day.events.length" class="cal-dot" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-right">
+          <div class="dash-quick">
+            <div class="dash-section-header">
+              <v-icon size="18" class="mr-2">mdi-flash</v-icon>
+              Accesos Rápidos
+            </div>
+            <div class="quick-grid">
+              <v-btn
+                v-for="q in quickActions"
+                :key="q.label"
+                :to="q.path"
+                variant="tonal"
+                :color="q.color"
+                size="large"
+                block
+                rounded="xl"
+                class="quick-btn"
+              >
+                <v-icon start>{{ q.icon }}</v-icon>
+                {{ q.label }}
+              </v-btn>
+            </div>
+          </div>
+
+          <div class="dash-birthdays">
+            <div class="dash-section-header">
+              <v-icon size="18" color="pink" class="mr-2">mdi-party-popper</v-icon>
+              Cumpleaños del Mes
+            </div>
+            <div v-if="birthdays.length" class="birthday-list">
+              <div v-for="b in birthdays" :key="b.id" class="birthday-item">
+                <div class="birthday-date">
+                  <span class="birthday-day">{{ b.day }}</span>
+                  <span class="birthday-month">{{ b.month }}</span>
+                </div>
+                <div class="birthday-info">
+                  <div class="birthday-name">{{ b.name }}</div>
+                  <div class="birthday-dept">{{ b.department }}</div>
+                </div>
+                <div class="birthday-icon">
+                  <v-icon size="16" color="pink">mdi-cake-variant</v-icon>
+                </div>
+              </div>
+            </div>
+            <div v-else class="empty-state">
+              <v-icon size="32" color="#334155">mdi-calendar-blank</v-icon>
+              <span>Sin cumpleaños este mes</span>
             </div>
           </div>
         </div>
       </div>
-
-      <div class="dash-right">
-        <div class="dash-quick">
-          <div class="dash-section-header">
-            <v-icon size="18" class="mr-2">mdi-flash</v-icon>
-            Accesos Rápidos
-          </div>
-          <div class="quick-grid">
-            <v-btn
-              v-for="q in quickActions"
-              :key="q.label"
-              :to="q.path"
-              variant="tonal"
-              :color="q.color"
-              size="large"
-              block
-              rounded="xl"
-              class="quick-btn"
-            >
-              <v-icon start>{{ q.icon }}</v-icon>
-              {{ q.label }}
-            </v-btn>
-          </div>
-        </div>
-
-        <div class="dash-birthdays">
-          <div class="dash-section-header">
-            <v-icon size="18" color="pink" class="mr-2">mdi-party-popper</v-icon>
-            Cumpleaños del Mes
-          </div>
-          <div v-if="birthdays.length" class="birthday-list">
-            <div v-for="b in birthdays" :key="b.id" class="birthday-item">
-              <div class="birthday-date">
-                <span class="birthday-day">{{ b.day }}</span>
-                <span class="birthday-month">{{ b.month }}</span>
-              </div>
-              <div class="birthday-info">
-                <div class="birthday-name">{{ b.name }}</div>
-                <div class="birthday-dept">{{ b.department }}</div>
-              </div>
-              <div class="birthday-icon">
-                <v-icon size="16" color="pink">mdi-cake-variant</v-icon>
-              </div>
-            </div>
-          </div>
-          <div v-else class="empty-state">
-            <v-icon size="32" color="#334155">mdi-calendar-blank</v-icon>
-            <span>Sin cumpleaños este mes</span>
-          </div>
-        </div>
-      </div>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -118,7 +135,8 @@ const notification = useNotificationStore()
 const stats = ref({ totalEmployees: 0, activeVacations: 0, pendingRequests: 0 })
 const events = ref<any[]>([])
 const birthdays = ref<any[]>([])
-const loading = ref(false)
+const loading = ref(true)
+const loadError = ref('')
 const currentMonth = ref(new Date().getMonth())
 const currentYear = ref(new Date().getFullYear())
 
@@ -171,7 +189,7 @@ const calendarMatrix = computed(() => {
   for (let w = 0; w < 6; w++) {
     const week: any[] = []
     for (let d = 0; d < 7; d++) {
-      const dayEvents = events.value.filter((e) => {
+      const dayEvents = events.value.filter((e: any) => {
         const s = new Date(e.start); const en = new Date(e.end)
         s.setHours(0,0,0,0); en.setHours(0,0,0,0)
         const c = new Date(cur); c.setHours(0,0,0,0)
@@ -191,32 +209,41 @@ const nextMonth = () => { if (currentMonth.value === 11) { currentMonth.value = 
 
 const loadData = async () => {
   loading.value = true
+  loadError.value = ''
+  let errors: string[] = []
+
   try {
-    const [s, e, b] = await Promise.all([
-      api.get('/admin/dashboard/stats'),
-      api.get('/admin/dashboard/events'),
-      api.get('/admin/birthdays'),
-    ])
+    const s = await api.get('/admin/dashboard/stats')
     stats.value = s.data
+  } catch (err: any) {
+    errors.push('stats: ' + (err.response?.data?.msg || err.message))
+  }
+
+  try {
+    const e = await api.get('/admin/dashboard/events')
     events.value = e.data
+  } catch (err: any) {
+    errors.push('eventos: ' + (err.response?.data?.msg || err.message))
+  }
+
+  try {
+    const b = await api.get('/admin/birthdays')
     birthdays.value = (b.data || []).map((item: any) => {
       const d = new Date(item.birth_date || item.fecha_nacimiento)
       return { ...item, day: d.getUTCDate(), month: d.toLocaleDateString('es-MX', { month: 'short' }) }
     })
   } catch (err: any) {
-    console.error('Error loading dashboard:', err)
-    if (err.response?.status === 403) {
-      notification.error('Sin acceso al dashboard. Contacta al administrador.')
-    } else if (err.response?.status === 401) {
-      notification.error('Sesión expirada. Redirigiendo...')
-    } else if (err.response?.status === 500) {
-      notification.error('Error del servidor. Verifica conexión a BD.')
-    } else {
-      notification.error('Error al cargar dashboard. Verifica conexión.')
-    }
-  } finally {
-    loading.value = false
+    errors.push('cumpleaños: ' + (err.response?.data?.msg || err.message))
   }
+
+  if (errors.length === 3) {
+    loadError.value = 'No se pudo cargar el dashboard. Verifica conexión a la base de datos.'
+    notification.error(loadError.value)
+  } else if (errors.length > 0) {
+    console.warn('Dashboard parcial:', errors.join(' | '))
+  }
+
+  loading.value = false
 }
 
 onMounted(loadData)
@@ -477,6 +504,20 @@ onMounted(loadData)
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 16px;
+}
+
+.loading-text {
+  font-size: 13px;
+  color: #64748B;
 }
 
 @media (max-width: 1100px) {
