@@ -79,7 +79,6 @@ export interface VacationSummary {
   work_days_per_week: number;
   es_arquitecto: boolean;
   rest_days_used: number;
-  position: string | null;
   total_days_available: number;
   entitlement_days: number;
   total_days_used: number;

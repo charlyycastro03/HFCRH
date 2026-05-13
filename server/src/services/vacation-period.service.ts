@@ -80,7 +80,7 @@ export class VacationPeriodService {
     const finalAvailable = Math.max(0, parseFloat(currentPeriod.days_granted) - historicTaken);
 
     const [empRows] = await db.query<any[]>(
-      'SELECT name, hire_date, work_days_per_week, es_arquitecto, position FROM employees WHERE id = ?',
+      'SELECT name, hire_date, work_days_per_week, es_arquitecto FROM employees WHERE id = ?',
       [employeeId]
     );
     if (!empRows.length) throw new Error('Empleado no encontrado');
@@ -102,7 +102,6 @@ export class VacationPeriodService {
       work_days_per_week: emp.work_days_per_week,
       es_arquitecto: !!emp.es_arquitecto,
       rest_days_used: restDaysUsed,
-      position: emp.position,
       total_days_available: finalAvailable,
       entitlement_days: currentPeriod.days_granted,
       total_days_used: historicTaken,
@@ -113,7 +112,7 @@ export class VacationPeriodService {
   async getExpiringVacationsAlert(daysThreshold = 30) {
     const db = await getDb();
     const [rows] = await db.query<any[]>(
-      `SELECT e.id AS employee_id, e.name AS employee_name, e.department, e.position,
+      `SELECT e.id AS employee_id, e.name AS employee_name, e.department,
               vp.id AS period_id, vp.period_year, vp.days_remaining, vp.expiry_date,
               DATEDIFF(vp.expiry_date, CURDATE()) AS days_until_expiry,
               CASE

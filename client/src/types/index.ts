@@ -56,7 +56,6 @@ export interface VacationSummary {
   work_days_per_week: number
   es_arquitecto: boolean
   rest_days_used: number
-  position: string | null
   total_days_available: number
   entitlement_days: number
   total_days_used: number
@@ -67,7 +66,6 @@ export interface VacationAlert {
   employee_id: number
   employee_name: string
   department: string
-  position: string
   period_id: number
   period_year: number
   days_remaining: number

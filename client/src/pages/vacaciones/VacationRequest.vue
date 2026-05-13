@@ -15,7 +15,7 @@
               <div class="d-flex justify-space-between align-center mb-3">
                 <div>
                   <div class="font-weight-bold text-h6">{{ employeeInfo.name }}</div>
-                  <div class="text-caption">{{ employeeInfo.position || (employeeInfo.es_arquitecto ? 'Arquitecto' : 'Colaborador') }}</div>
+                  <div class="text-caption">{{ employeeInfo.department || (employeeInfo.es_arquitecto ? 'Arquitecto' : 'Colaborador') }}</div>
                 </div>
                 <v-chip color="primary" size="large">{{ daysRemaining }} días disponibles</v-chip>
               </div>
