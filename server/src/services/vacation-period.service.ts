@@ -15,8 +15,20 @@ export class VacationPeriodService {
     const dayDiff = today.getDate() - hireDate.getDate();
     if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) yearsCompleted--;
 
+    await db.query('DELETE FROM vacation_movements WHERE period_id IN (SELECT id FROM vacation_periods WHERE employee_id = ?)', [employeeId]);
+    await db.query('DELETE FROM vacation_periods WHERE employee_id = ?', [employeeId]);
+
     if (yearsCompleted < 1) {
-      await this.syncProporcionalPeriod(employeeId, hireDate, today);
+      const totalMonths = (today.getFullYear() - hireDate.getFullYear()) * 12 + (today.getMonth() - hireDate.getMonth()) + (today.getDate() >= hireDate.getDate() ? 0 : -1);
+      if (totalMonths <= 0) return;
+      const daysGranted = Math.round(12 * totalMonths / 12);
+      const nextAnniversary = new Date(hireDate);
+      nextAnniversary.setFullYear(nextAnniversary.getFullYear() + 1);
+      await db.query(
+        `INSERT INTO vacation_periods (employee_id, period_year, start_date, end_date, expiry_date, days_granted)
+         VALUES (?, 0, ?, ?, ?, ?)`,
+        [employeeId, hireDate.toISOString().split('T')[0], nextAnniversary.toISOString().split('T')[0], nextAnniversary.toISOString().split('T')[0], daysGranted]
+      );
       return;
     }
 
@@ -30,36 +42,10 @@ export class VacationPeriodService {
 
       await db.query(
         `INSERT INTO vacation_periods (employee_id, period_year, start_date, end_date, expiry_date, days_granted)
-         VALUES (?, ?, ?, ?, ?, ?)
-         ON DUPLICATE KEY UPDATE days_granted = VALUES(days_granted)`,
+         VALUES (?, ?, ?, ?, ?, ?)`,
         [employeeId, year, startDate.toISOString().split('T')[0], anniversary.toISOString().split('T')[0], expiryDate.toISOString().split('T')[0], daysGranted]
       );
     }
-  }
-
-  private async syncProporcionalPeriod(employeeId: number, hireDate: Date, today: Date): Promise<void> {
-    const db = await getDb();
-    const monthsWorked =
-      (today.getFullYear() - hireDate.getFullYear()) * 12 + (today.getMonth() - hireDate.getMonth()) +
-      (today.getDate() >= hireDate.getDate() ? 0 : -1);
-    if (monthsWorked <= 0) return;
-
-    const daysGranted = Math.round(12 * monthsWorked / 12);
-    const nextAnniversary = new Date(hireDate);
-    nextAnniversary.setFullYear(nextAnniversary.getFullYear() + 1);
-
-    await db.query(
-      `INSERT INTO vacation_periods (employee_id, period_year, start_date, end_date, expiry_date, days_granted)
-       VALUES (?, 0, ?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE days_granted = VALUES(days_granted)`,
-      [
-        employeeId,
-        hireDate.toISOString().split('T')[0],
-        nextAnniversary.toISOString().split('T')[0],
-        nextAnniversary.toISOString().split('T')[0],
-        daysGranted,
-      ]
-    );
   }
 
   async getEmployeeVacationSummary(employeeId: number): Promise<VacationSummary> {
