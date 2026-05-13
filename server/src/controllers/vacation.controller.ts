@@ -179,14 +179,14 @@ export async function uploadSignedRequest(req: Request, res: Response): Promise<
 
   try {
     const db = await getDb();
-    const [requests] = await db.query<any[]>('SELECT id FROM vacation_requests WHERE id = ?', [id]);
+    const [requests] = await db.query<any[]>('SELECT id, status FROM vacation_requests WHERE id = ?', [id]);
     if (!requests.length) {
       res.status(404).json({ msg: 'Solicitud no encontrada' });
       return;
     }
 
-    await db.query("UPDATE vacation_requests SET signed_file_path = ? WHERE id = ?", [fileBase64, id]);
-    res.json({ msg: 'Archivo subido correctamente' });
+    await db.query("UPDATE vacation_requests SET signed_file_path = ?, status = 'FIRMADO' WHERE id = ?", [fileBase64, id]);
+    res.json({ msg: 'PDF subido correctamente. Solicitud marcada como LISTA.' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: 'Error al subir archivo' });

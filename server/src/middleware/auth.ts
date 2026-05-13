@@ -11,10 +11,14 @@ declare global {
 }
 
 export function verifyToken(req: Request, res: Response, next: NextFunction): void {
-  const token = req.header('Authorization');
+  let token = req.header('Authorization');
   if (!token) {
     res.status(401).json({ msg: 'Acceso denegado' });
     return;
+  }
+
+  if (token.startsWith('Bearer ')) {
+    token = token.slice(7);
   }
 
   try {
