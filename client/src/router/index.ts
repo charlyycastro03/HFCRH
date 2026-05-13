@@ -41,29 +41,9 @@ const router = createRouter({
           component: () => import('@/pages/vacaciones/VacationRequest.vue'),
         },
         {
-          path: 'rh/mis-vacaciones',
-          name: 'MyVacations',
-          component: () => import('@/pages/rh/MyVacations.vue'),
-        },
-        {
-          path: 'rh/autorizaciones',
-          name: 'AuthorizationCenter',
-          component: () => import('@/pages/rh/AuthorizationCenter.vue'),
-        },
-        {
-          path: 'rh/calendario',
-          name: 'TeamCalendar',
-          component: () => import('@/pages/rh/TeamCalendar.vue'),
-        },
-        {
           path: 'rh/reportes',
           name: 'Reports',
           component: () => import('@/pages/rh/Reports.vue'),
-        },
-        {
-          path: 'rh/alertas',
-          name: 'VacationAlerts',
-          component: () => import('@/pages/rh/VacationExpiryAlerts.vue'),
         },
       ],
     },

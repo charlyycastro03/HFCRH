@@ -73,10 +73,7 @@ const initials = computed(() => {
 const menuItems = [
   { title: 'Inicio', icon: 'mdi-view-dashboard', path: '/dashboard' },
   { title: 'Solicitar Vacaciones', icon: 'mdi-calendar-check', path: '/vacaciones/solicitar' },
-  { title: 'Mis Vacaciones', icon: 'mdi-beach', path: '/rh/mis-vacaciones' },
-  { title: 'Autorizaciones', icon: 'mdi-file-check', path: '/rh/autorizaciones' },
-  { title: 'Calendario', icon: 'mdi-calendar-month', path: '/rh/calendario' },
-  { title: 'Alertas', icon: 'mdi-alert-circle', path: '/rh/alertas', adminOnly: true },
+
   { title: 'Reportes', icon: 'mdi-file-chart', path: '/rh/reportes', adminOnly: true },
   { title: 'Usuarios', icon: 'mdi-account-group', path: '/admin/users', adminOnly: true },
   { title: 'Empleados', icon: 'mdi-account-tie', path: '/admin/employees', adminOnly: true },
