@@ -34,7 +34,8 @@ export async function getCalendarEvents(req: Request, res: Response): Promise<vo
     const [results] = await db.query<any[]>(
       `SELECT r.id, r.employee_name as title, r.start_date as start, r.end_date as end_date,
               r.type, r.days_requested, r.status
-       FROM vacation_requests r WHERE r.status IN ('APPROVED', 'FIRMADO')`
+       FROM vacation_requests r
+       WHERE (r.status IN ('APPROVED', 'FIRMADO')) OR (r.type = 'REST_DAY' AND r.status != 'REJECTED')`
     );
 
     const events = results.map((ev: any) => ({

@@ -492,7 +492,7 @@ const submit = async () => {
           start_date: day,
           end_date: day,
           days_requested: 1,
-          status: 'PENDING',
+          status: 'APPROVED',
           comments: comments.value || 'Día de descanso',
           type: 'REST_DAY',
         })
