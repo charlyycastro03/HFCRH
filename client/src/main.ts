@@ -13,4 +13,10 @@ app.use(createPinia())
 app.use(router)
 app.use(vuetify)
 
+const redirect = sessionStorage.getItem('redirect')
+if (redirect) {
+  sessionStorage.removeItem('redirect')
+  router.replace(redirect)
+}
+
 app.mount('#app')
