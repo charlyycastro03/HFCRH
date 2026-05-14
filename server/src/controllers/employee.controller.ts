@@ -1,15 +1,6 @@
 import { Request, Response } from 'express';
 import { getDb } from '../config/db';
-
-function getDaysGrantedByYear(years: number): number {
-  if (years < 1) return 0;
-  if (years === 1) return 12;
-  if (years === 2) return 14;
-  if (years === 3) return 16;
-  if (years === 4) return 18;
-  if (years === 5) return 20;
-  return 22;
-}
+import { getDaysGrantedByYear } from '../utils/lft';
 
 function calculateProportionalDays(hireDateStr: string | null): number {
   if (!hireDateStr) return 0;
