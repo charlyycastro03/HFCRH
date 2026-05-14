@@ -80,8 +80,7 @@ const calendarCells = computed(() => {
   for (let p = 0; p < pad; p++) { const d = new Date(calYear.value, calMonth.value, p - pad + 1); cells.push({ day: d.getDate(), date: d, cur: false, hol: false, wk: false, past: true, range: false, st: false, en: false, rest: false }) }
   for (let d = 1; d <= last.getDate(); d++) {
     const dt = new Date(calYear.value, calMonth.value, d)
-    const past = dt < new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    cells.push({ day: d, date: dt, cur: true, hol: isMexicanHoliday(dt), wk: isWeekend(dt, workDays.value), past, range: isBetween(dt, s, e), st: sameDay(dt, s), en: sameDay(dt, e), rest: isRest(dt) })
+    cells.push({ day: d, date: dt, cur: true, hol: isMexicanHoliday(dt), wk: isWeekend(dt, workDays.value), past: false, range: isBetween(dt, s, e), st: sameDay(dt, s), en: sameDay(dt, e), rest: isRest(dt) })
   }
   const rem = 42 - cells.length; for (let r = 0; r < rem; r++) { const d = new Date(calYear.value, calMonth.value + 1, r + 1); cells.push({ day: d.getDate(), date: d, cur: false, hol: false, wk: false, past: true, range: false, st: false, en: false, rest: false }) }
   return cells
@@ -96,7 +95,7 @@ const selectedDays = computed(() => {
 function cellClass(c: any) { return { 'other-month': !c.cur, 'is-holiday': c.hol, 'is-weekend': c.wk && !c.hol, 'is-past': c.past, 'is-range': c.range, 'is-start': c.st, 'is-end': c.en, 'is-rest': c.rest, 'is-rest-blocked': props.mode === 'rest' && (c.hol || c.wk) } }
 
 function selectDay(cell: any) {
-  if (!cell.cur || cell.past) return
+  if (!cell.cur) return
   if (props.mode === 'rest' && (cell.hol || cell.wk)) return
   const ds = fmt(cell.date)
   if (props.mode === 'rest') {
@@ -123,7 +122,6 @@ function nextMonth() { if (calMonth.value === 11) { calMonth.value = 0; calYear.
 .cal-cell { border-radius: 8px; padding: 6px 4px; text-align: center; cursor: pointer; position: relative; transition: all 0.12s; min-height: 36px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .cal-cell:hover { background: rgba(99,102,241,0.15); }
 .other-month { opacity: 0.2; pointer-events: none; }
-.is-past { opacity: 0.3; pointer-events: none; }
 .cal-num { font-size: 13px; font-weight: 600; color: #CBD5E1; line-height: 1; position: relative; z-index: 1; }
 .is-holiday .cal-num { color: #FCA5A5; font-weight: 700; }
 .is-weekend .cal-num { color: #64748B; }
