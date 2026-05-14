@@ -15,16 +15,8 @@ export async function getEmployeeVacationInfo(req: Request, res: Response): Prom
     }
 
     const emp = employees[0];
-    const entitlement = calculateEntitlement(emp.hire_date);
+    const summary = await vacationPeriodService.getEmployeeVacationSummary(Number(id));
     const today = new Date();
-
-    const [restCheck] = await db.query<any[]>(
-      `SELECT SUM(days_requested) as total_days FROM vacation_requests
-       WHERE employee_id = ? AND type = 'REST_DAY'
-       AND MONTH(start_date) = ? AND YEAR(start_date) = ? AND status != 'REJECTED'`,
-      [id, today.getMonth() + 1, today.getFullYear()]
-    );
-    const restDaysUsed = restCheck[0]?.total_days || 0;
     const finalWorkDays = emp.work_days_per_week ?? (emp.es_arquitecto ? 5 : 6);
 
     res.json({
@@ -33,11 +25,11 @@ export async function getEmployeeVacationInfo(req: Request, res: Response): Prom
       hire_date: emp.hire_date,
       department: emp.department,
       vacation_days_used: emp.vacation_days_used,
-      entitlement_days: entitlement,
-      available_days: emp.vacation_days_available,
+      entitlement_days: summary.entitlement_days,
+      available_days: summary.total_days_available,
       work_days_per_week: finalWorkDays,
       es_arquitecto: emp.es_arquitecto,
-      rest_days_used: restDaysUsed,
+      rest_days_used: summary.rest_days_used,
     });
   } catch (error) {
     console.error(error);
