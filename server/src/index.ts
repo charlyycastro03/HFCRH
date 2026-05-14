@@ -3,6 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -16,7 +18,7 @@ import './cron/vacation.cron';
 
 const app = express();
 
-app.use(helmet());
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
@@ -38,6 +40,21 @@ app.get('/api', (_req, res) => {
 });
 
 app.use('/uploads', express.static('uploads'));
+
+let clientDist = path.join(process.cwd(), 'client', 'dist');
+if (!fs.existsSync(clientDist)) {
+  clientDist = path.join(__dirname, '..', '..', '..', 'client', 'dist');
+  if (!fs.existsSync(clientDist)) {
+    clientDist = path.join(process.cwd(), 'dist');
+  }
+}
+console.log('[STATIC]', clientDist, 'exists:', fs.existsSync(clientDist));
+app.use(express.static(clientDist));
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(clientDist, 'index.html'), (err) => {
+    if (err) res.status(404).json({ msg: 'Archivo no encontrado', path: clientDist });
+  });
+});
 
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('[ERROR]', err.stack);

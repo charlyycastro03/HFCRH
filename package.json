@@ -1,0 +1,8 @@
+{
+  "name": "hfc-rh",
+  "private": true,
+  "scripts": {
+    "vercel-build": "cd client && npm install && npm run build && cd ../server && npm install && npm run build",
+    "build": "cd client && npm run build"
+  }
+}
