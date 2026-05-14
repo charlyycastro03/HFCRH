@@ -193,17 +193,17 @@
                   Días de descanso (independientes de vacaciones)
                 </div>
                 <div class="descansos-grid">
-                  <div class="descanso-card" :class="{ active: descansos.includes('1') }" @click="toggleDescanso('1')">
-                    <v-icon size="24" :color="descansos.includes('1') ? '#F97316' : '#475569'">mdi-calendar-check</v-icon>
+                  <div class="descanso-card" :class="{ active: !!descanso1Date }" @click="pickDescanso(1)">
+                    <v-icon size="24" :color="descanso1Date ? '#F97316' : '#475569'">mdi-calendar-check</v-icon>
                     <div class="descanso-name">Descanso 1</div>
-                    <div class="descanso-date">{{ descanso1Date || 'Sin fecha' }}</div>
-                    <input type="date" v-model="descanso1Date" class="descanso-input" @click.stop @change="toggleDescanso('1')" />
+                    <div class="descanso-date">{{ descanso1Date ? fmtShort(descanso1Date) : 'Toca para elegir' }}</div>
+                    <input ref="descansoInput1" type="date" class="descanso-input" @change="onDescansoPick(1, $event)" />
                   </div>
-                  <div class="descanso-card" :class="{ active: descansos.includes('2') }" @click="toggleDescanso('2')">
-                    <v-icon size="24" :color="descansos.includes('2') ? '#F97316' : '#475569'">mdi-calendar-check</v-icon>
+                  <div class="descanso-card" :class="{ active: !!descanso2Date }" @click="pickDescanso(2)">
+                    <v-icon size="24" :color="descanso2Date ? '#F97316' : '#475569'">mdi-calendar-check</v-icon>
                     <div class="descanso-name">Descanso 2</div>
-                    <div class="descanso-date">{{ descanso2Date || 'Sin fecha' }}</div>
-                    <input type="date" v-model="descanso2Date" class="descanso-input" @click.stop @change="toggleDescanso('2')" />
+                    <div class="descanso-date">{{ descanso2Date ? fmtShort(descanso2Date) : 'Toca para elegir' }}</div>
+                    <input ref="descansoInput2" type="date" class="descanso-input" @change="onDescansoPick(2, $event)" />
                   </div>
                 </div>
               </div>
@@ -375,6 +375,30 @@ const uploadTarget = ref<any>(null)
 const descansos = ref<string[]>([])
 const descanso1Date = ref('')
 const descanso2Date = ref('')
+const descansoInput1 = ref<HTMLInputElement | null>(null)
+const descansoInput2 = ref<HTMLInputElement | null>(null)
+
+function fmtShort(d: string) {
+  if (!d) return ''
+  const dt = new Date(d + 'T12:00:00')
+  return dt.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })
+}
+
+function pickDescanso(n: number) {
+  if (n === 1) descansoInput1.value?.click()
+  else descansoInput2.value?.click()
+}
+
+function onDescansoPick(n: number, event: Event) {
+  const input = event.target as HTMLInputElement
+  if (!input.value) return
+  if (n === 1) descanso1Date.value = input.value
+  else descanso2Date.value = input.value
+  const arr = []
+  if (descanso1Date.value) arr.push('1')
+  if (descanso2Date.value) arr.push('2')
+  descansos.value = arr
+}
 const dateRange = ref({ start: '', end: '' })
 const restDays = ref<string[]>([])
 
