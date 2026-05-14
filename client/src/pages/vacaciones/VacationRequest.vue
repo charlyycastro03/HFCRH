@@ -190,20 +190,15 @@
               <div v-if="employeeInfo?.es_arquitecto" class="descansos-section">
                 <div class="descansos-label">
                   <v-icon size="16" color="secondary">mdi-briefcase-off</v-icon>
-                  Días de descanso (independientes de vacaciones)
+                  Días de descanso este mes
                 </div>
-                <div class="descansos-grid">
-                  <div class="descanso-card" :class="{ active: !!descanso1Date }" @click="pickDescanso(1)">
-                    <v-icon size="24" :color="descanso1Date ? '#F97316' : '#475569'">mdi-calendar-check</v-icon>
-                    <div class="descanso-name">Descanso 1</div>
-                    <div class="descanso-date">{{ descanso1Date ? fmtShort(descanso1Date) : 'Toca para elegir' }}</div>
-                    <input ref="descansoInput1" type="date" class="descanso-input" @change="onDescansoPick(1, $event)" />
+                <div class="descansos-info">
+                  <div class="descansos-progress">
+                    <span class="descansos-count">{{ employeeInfo.rest_days_used || 0 }} / 2</span>
+                    <span class="descansos-hint">usados, {{ Math.max(0, 2 - (employeeInfo.rest_days_used || 0)) }} disponibles</span>
                   </div>
-                  <div class="descanso-card" :class="{ active: !!descanso2Date }" @click="pickDescanso(2)">
-                    <v-icon size="24" :color="descanso2Date ? '#F97316' : '#475569'">mdi-calendar-check</v-icon>
-                    <div class="descanso-name">Descanso 2</div>
-                    <div class="descanso-date">{{ descanso2Date ? fmtShort(descanso2Date) : 'Toca para elegir' }}</div>
-                    <input ref="descansoInput2" type="date" class="descanso-input" @change="onDescansoPick(2, $event)" />
+                  <div v-if="employeeInfo.rest_days_dates?.length" class="descansos-used-list">
+                    <span v-for="(d, i) in employeeInfo.rest_days_dates" :key="i" class="rest-date-chip">{{ d }}</span>
                   </div>
                 </div>
               </div>
@@ -375,30 +370,6 @@ const uploadTarget = ref<any>(null)
 const descansos = ref<string[]>([])
 const descanso1Date = ref('')
 const descanso2Date = ref('')
-const descansoInput1 = ref<HTMLInputElement | null>(null)
-const descansoInput2 = ref<HTMLInputElement | null>(null)
-
-function fmtShort(d: string) {
-  if (!d) return ''
-  const dt = new Date(d + 'T12:00:00')
-  return dt.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })
-}
-
-function pickDescanso(n: number) {
-  if (n === 1) descansoInput1.value?.click()
-  else descansoInput2.value?.click()
-}
-
-function onDescansoPick(n: number, event: Event) {
-  const input = event.target as HTMLInputElement
-  if (!input.value) return
-  if (n === 1) descanso1Date.value = input.value
-  else descanso2Date.value = input.value
-  const arr = []
-  if (descanso1Date.value) arr.push('1')
-  if (descanso2Date.value) arr.push('2')
-  descansos.value = arr
-}
 const dateRange = ref({ start: '', end: '' })
 const restDays = ref<string[]>([])
 
@@ -926,54 +897,39 @@ onMounted(async () => {
   color: #F97316;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
-.descansos-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+.descansos-info { text-align: center; }
+
+.descansos-progress { margin-bottom: 8px; }
+
+.descansos-count {
+  font-size: 18px;
+  font-weight: 700;
+  color: #F97316;
 }
 
-.descanso-card {
-  position: relative;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 12px;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.descanso-card:hover { border-color: rgba(249,115,22,0.3); }
-
-.descanso-card.active {
-  background: rgba(249,115,22,0.1);
-  border-color: #F97316;
-}
-
-.descanso-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: #94A3B8;
-}
-
-.descanso-date {
+.descansos-hint {
   font-size: 11px;
   color: #64748B;
+  margin-left: 6px;
 }
 
-.descanso-input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-  width: 100%;
-  height: 100%;
+.descansos-used-list {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.rest-date-chip {
+  font-size: 11px;
+  background: rgba(249,115,22,0.15);
+  color: #FB923C;
+  padding: 3px 10px;
+  border-radius: 8px;
+  font-weight: 600;
 }
 
 .rest-dates { display: flex; gap: 4px; justify-content: center; margin-top: 6px; flex-wrap: wrap; }
