@@ -93,10 +93,11 @@ const selectedDays = computed(() => {
   if (!s || !e) return 0; return Math.round((e.getTime() - s.getTime()) / 86400000) + 1
 })
 
-function cellClass(c: any) { return { 'other-month': !c.cur, 'is-holiday': c.hol, 'is-weekend': c.wk && !c.hol, 'is-past': c.past, 'is-range': c.range, 'is-start': c.st, 'is-end': c.en, 'is-rest': c.rest } }
+function cellClass(c: any) { return { 'other-month': !c.cur, 'is-holiday': c.hol, 'is-weekend': c.wk && !c.hol, 'is-past': c.past, 'is-range': c.range, 'is-start': c.st, 'is-end': c.en, 'is-rest': c.rest, 'is-rest-blocked': props.mode === 'rest' && (c.hol || c.wk) } }
 
 function selectDay(cell: any) {
   if (!cell.cur || cell.past) return
+  if (props.mode === 'rest' && (cell.hol || cell.wk)) return
   const ds = fmt(cell.date)
   if (props.mode === 'rest') {
     const cur = [...(props.restSelected || [])]
@@ -126,6 +127,10 @@ function nextMonth() { if (calMonth.value === 11) { calMonth.value = 0; calYear.
 .cal-num { font-size: 12px; font-weight: 600; color: #94A3B8; line-height: 1; position: relative; z-index: 1; }
 .is-holiday .cal-num { color: #EF4444; }
 .is-weekend .cal-num { color: #64748B; }
+.is-rest .cal-num { color: #F97316; font-weight: 700; }
+.is-rest-blocked { cursor: not-allowed !important; }
+.is-rest-blocked .cal-num { color: #475569; }
+.is-rest-blocked:hover { background: transparent !important; }
 .is-start .cal-num, .is-end .cal-num, .is-range .cal-num { color: #fff; }
 .is-start { background: #6366F1 !important; border-radius: 8px 0 0 8px; }
 .is-end { background: #6366F1 !important; border-radius: 0 8px 8px 0; }
