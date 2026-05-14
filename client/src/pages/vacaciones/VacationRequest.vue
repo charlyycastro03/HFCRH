@@ -584,6 +584,7 @@ const printRequest = (item: any) => {
       <hr class="separator">
       <div class="signatures">
         <div class="sig-block"><div class="sig-line"></div><div class="sig-label">Firma del Colaborador</div></div>
+        <div class="sig-block"><div class="sig-line"></div><div class="sig-label">Firma de autorización del gerente del área y/o director</div></div>
         <div class="sig-block"><div class="sig-line"></div><div class="sig-label">Vo.Bo. Recursos Humanos</div></div>
       </div>
       <div class="footer"><p>Portal RH · HFC Construcciones · ${new Date().toLocaleDateString('es-MX')} · Folio #${item.id}</p></div>
