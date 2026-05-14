@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import path from 'path';
 
 dotenv.config();
 
@@ -16,7 +17,7 @@ import './cron/vacation.cron';
 
 const app = express();
 
-app.use(helmet());
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
@@ -38,6 +39,13 @@ app.get('/api', (_req, res) => {
 });
 
 app.use('/uploads', express.static('uploads'));
+
+const clientDist = path.join(process.cwd(), 'client', 'dist');
+app.use(express.static(clientDist));
+
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(clientDist, 'index.html'));
+});
 
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('[ERROR]', err.stack);
