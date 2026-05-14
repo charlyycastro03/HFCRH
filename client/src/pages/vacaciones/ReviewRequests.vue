@@ -16,20 +16,18 @@
                 <th>Período</th>
                 <th>Días</th>
                 <th>Estado</th>
-                <th>Acción</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="r in requests" :key="r.id">
+              <tr v-for="r in requests" :key="r.id" style="cursor:pointer" @click="goToRequest(r)">
                 <td class="name-cell">{{ r.employee_name }}</td>
                 <td>{{ r.department || '—' }}</td>
                 <td>{{ fmtDate(r.start_date) }} — {{ fmtDate(r.end_date) }}</td>
                 <td class="days-cell">{{ r.days_requested }}</td>
                 <td><v-chip size="x-small" :color="r.signed_file_path ? 'success' : 'warning'" variant="tonal">{{ r.signed_file_path ? 'Listo' : 'Pendiente' }}</v-chip></td>
-                <td><v-btn size="x-small" variant="text" color="primary" @click="goToRequest(r)">Ver solicitud</v-btn></td>
               </tr>
               <tr v-if="!requests.length">
-                <td colspan="6" class="empty-cell">Sin solicitudes</td>
+                <td colspan="5" class="empty-cell">Sin solicitudes</td>
               </tr>
             </tbody>
           </table>
@@ -78,7 +76,7 @@ onMounted(async () => {
 .table-wrapper { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; }
 .data-table thead th { padding: 14px 20px; text-align: left; font-size: 11px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-.data-table tbody tr { transition: background 0.15s; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.data-table tbody tr { transition: background 0.15s; border-bottom: 1px solid rgba(255,255,255,0.03); cursor: pointer; }
 .data-table tbody tr:last-child { border-bottom: none; }
 .data-table tbody tr:hover { background: rgba(99,102,241,0.05); }
 .data-table tbody td { padding: 14px 20px; font-size: 13px; color: #94A3B8; }
