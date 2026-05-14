@@ -85,8 +85,8 @@
           <v-btn color="primary" :loading="loading" rounded="lg" @click="generateReport" class="mr-2">
             <v-icon start>mdi-magnify</v-icon> Generar
           </v-btn>
-          <v-btn color="secondary" variant="tonal" rounded="lg" :disabled="!reportData.length" @click="search = search">
-            <v-icon start>mdi-filter</v-icon> Filtrar
+          <v-btn color="error" variant="tonal" rounded="lg" @click="clearFilters">
+            <v-icon start>mdi-close</v-icon> Limpiar
           </v-btn>
         </div>
       </v-card-text>
@@ -211,6 +211,19 @@ const generateReport = async () => {
     reportData.value = data || []
   } catch { reportData.value = [] }
   finally { loading.value = false }
+}
+
+const clearFilters = () => {
+  search.value = ''
+  month.value = null
+  year.value = new Date().getFullYear()
+  filters.requestType = 'Todos'
+  filters.employeeId = null
+  filters.startDate = ''
+  filters.endDate = ''
+  filters.pdfStatus = 'ALL'
+  reportData.value = []
+  hasSearched.value = false
 }
 
 const exportExcel = () => {
