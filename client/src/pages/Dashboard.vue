@@ -11,7 +11,7 @@
       <v-alert v-if="loadError" type="error" variant="tonal" closable class="mb-4" rounded="lg" @click:close="loadError = ''">{{ loadError }}</v-alert>
 
       <div class="stats-grid">
-        <div v-for="(stat, i) in statsCards" :key="stat.label" class="stat-card" :style="{ animationDelay: `${i * 100}ms` }" :class="`stat-card--${stat.color}`">
+        <div v-for="(stat, i) in statsCards" :key="stat.label" class="stat-card" :style="{ animationDelay: `${i * 100}ms` }" :class="`stat-card--${stat.color}`" style="cursor:pointer" @click="$router.push(stat.path)">
           <div class="stat-icon-wrap"><v-icon size="22">{{ stat.icon }}</v-icon></div>
           <div class="stat-body">
             <div class="stat-value">{{ stat.value }}</div>
@@ -70,8 +70,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '@/api/axios'
 import Header from '@/components/layout/Header.vue'
+
+const router = useRouter()
 
 const stats = ref({ totalEmployees: 0, activeVacations: 0, pendingRequests: 0 })
 const events = ref<any[]>([])
@@ -86,15 +89,15 @@ const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Juli
 const monthName = computed(() => monthNames[currentMonth.value] || '')
 
 const quickActions = [
+  { label: 'Nueva Solicitud', icon: 'mdi-plus', path: '/vacaciones/solicitar', color: 'primary' },
   { label: 'Registrar Empleado', icon: 'mdi-account-plus', path: '/admin/employees', color: 'secondary' },
-  { label: 'Listos (PDF)', icon: 'mdi-file-pdf-box', path: '/vacaciones/revisar?filter=signed', color: 'success' },
-  { label: 'Por Firmar', icon: 'mdi-file-clock', path: '/vacaciones/revisar?filter=pending', color: 'warning' },
+  { label: 'Ver Reportes', icon: 'mdi-file-chart', path: '/rh/reportes', color: 'info' },
 ]
 
 const statsCards = computed(() => [
-  { label: 'Total Empleados', value: stats.value.totalEmployees || 0, icon: 'mdi-account-group', color: 'primary', trend: 1 },
-  { label: 'Solicitudes Firmadas', value: stats.value.activeVacations || 0, icon: 'mdi-file-check', color: 'success', trend: 1 },
-  { label: 'Pendientes de Firmar', value: stats.value.pendingRequests || 0, icon: 'mdi-file-clock', color: 'warning', trend: -1 },
+  { label: 'Total Empleados', value: stats.value.totalEmployees || 0, icon: 'mdi-account-group', color: 'primary', trend: 1, path: '/admin/employees' },
+  { label: 'Solicitudes Firmadas', value: stats.value.activeVacations || 0, icon: 'mdi-file-check', color: 'success', trend: 1, path: '/vacaciones/revisar?filter=signed' },
+  { label: 'Pendientes de Firmar', value: stats.value.pendingRequests || 0, icon: 'mdi-file-clock', color: 'warning', trend: -1, path: '/vacaciones/revisar?filter=pending' },
 ])
 
 const calendarDays = computed(() => {
