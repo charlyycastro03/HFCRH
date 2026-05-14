@@ -82,8 +82,11 @@
             hide-details
             class="filter-xs"
           />
-          <v-btn color="primary" :loading="loading" rounded="lg" @click="generateReport">
+          <v-btn color="primary" :loading="loading" rounded="lg" @click="generateReport" class="mr-2">
             <v-icon start>mdi-magnify</v-icon> Generar
+          </v-btn>
+          <v-btn color="secondary" variant="tonal" rounded="lg" :disabled="!reportData.length" @click="search = search">
+            <v-icon start>mdi-filter</v-icon> Filtrar
           </v-btn>
         </div>
       </v-card-text>
