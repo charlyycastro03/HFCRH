@@ -80,7 +80,10 @@
                 </div>
                 <div v-if="employeeInfo.es_arquitecto" class="balance-item" style="grid-column: span 4;">
                   <div class="balance-value" style="color: #F97316; font-size: 16px;">{{ employeeInfo.rest_days_used || 0 }} / 2</div>
-                  <div class="balance-label">Descansos usados este mes (NO descuentan de vacaciones)</div>
+                  <div class="balance-label">Descansos usados este mes</div>
+                  <div v-if="employeeInfo.rest_days_dates?.length" class="rest-dates">
+                    <span v-for="(d, i) in employeeInfo.rest_days_dates" :key="i" class="rest-date-chip">{{ d }}</span>
+                  </div>
                 </div>
               </div>
             </Transition>
@@ -949,7 +952,8 @@ onMounted(async () => {
   height: 100%;
 }
 
-.form-section { margin-top: 16px; }
+.rest-dates { display: flex; gap: 4px; justify-content: center; margin-top: 6px; flex-wrap: wrap; }
+.rest-date-chip { font-size: 10px; background: rgba(249,115,22,0.2); color: #F97316; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
 .form-label { font-size: 12px; font-weight: 600; color: #94A3B8; margin-bottom: 10px; display: block; }
 .rest-label { color: #F97316; }
 

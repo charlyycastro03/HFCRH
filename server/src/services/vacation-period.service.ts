@@ -92,12 +92,27 @@ export class VacationPeriodService {
     );
     const restDaysUsed = parseFloat(restRows[0]?.total_rest || 0);
 
+    const [restDateRows] = await db.query<any[]>(
+      `SELECT DISTINCT start_date FROM vacation_requests
+       WHERE employee_id = ? AND type = 'REST_DAY'
+       AND MONTH(start_date) = ? AND YEAR(start_date) = ?
+       AND status != 'REJECTED'
+       ORDER BY start_date ASC`,
+      [employeeId, now.getMonth() + 1, now.getFullYear()]
+    );
+    const restDaysDates = restDateRows.map((r: any) => {
+      if (!r.start_date) return '';
+      const d = new Date(r.start_date);
+      return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+    }).filter(Boolean);
+
     return {
       name: emp.name,
       hire_date: emp.hire_date,
       work_days_per_week: emp.work_days_per_week,
       es_arquitecto: !!emp.es_arquitecto,
       rest_days_used: restDaysUsed,
+      rest_days_dates: restDaysDates,
       total_days_available: finalAvailable,
       entitlement_days: currentPeriod.days_granted,
       total_days_used: historicTaken,
