@@ -97,7 +97,6 @@ const quickActions = [
 const statsCards = computed(() => [
   { label: 'Total Empleados', value: stats.value.totalEmployees || 0, icon: 'mdi-account-group', color: 'primary', trend: 1, path: '/admin/employees' },
   { label: 'Solicitudes Firmadas', value: stats.value.activeVacations || 0, icon: 'mdi-file-check', color: 'success', trend: 1, path: '/vacaciones/revisar?filter=signed' },
-  { label: 'Pendientes de Firmar', value: stats.value.pendingRequests || 0, icon: 'mdi-file-clock', color: 'warning', trend: -1, path: '/vacaciones/revisar?filter=pending' },
 ])
 
 const calendarDays = computed(() => {

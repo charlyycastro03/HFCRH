@@ -275,6 +275,7 @@
                   Imprimir
                 </v-btn>
                 <v-btn
+                  v-if="false"
                   size="x-small"
                   variant="text"
                   :color="item.signed_file_path ? 'success' : 'warning'"
