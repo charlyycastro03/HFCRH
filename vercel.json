@@ -19,10 +19,6 @@
     {
       "source": "/uploads/(.*)",
       "destination": "server/src/index.ts"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/client/$1"
     }
   ]
 }
