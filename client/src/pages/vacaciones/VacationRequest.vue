@@ -349,6 +349,7 @@ import Header from '@/components/layout/Header.vue'
 import DateRangeCalendar from '@/components/DateRangeCalendar.vue'
 
 const notification = useNotificationStore()
+const route = useRoute()
 const employees = ref<any[]>([])
 const selectedEmployeeId = ref<number | null>(null)
 const employeeInfo = ref<any>(null)
@@ -645,7 +646,6 @@ const deleteItemConfirm = async () => {
 
 onMounted(async () => {
   await loadEmployees()
-  const route = useRoute()
   const empId = route.query.employeeId
   if (empId) {
     selectedEmployeeId.value = Number(empId)
