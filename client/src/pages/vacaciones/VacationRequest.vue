@@ -148,25 +148,12 @@
             </Transition>
 
             <div v-if="employeeInfo" class="form-section">
-              <div class="form-row">
-                <v-text-field
-                  v-model="startDate"
-                  label="Fecha inicio"
-                  type="date"
-                  :min="minDate"
-                  @update:model-value="calculate"
-                  prepend-inner-icon="mdi-calendar-start"
-                />
-                <v-text-field
-                  v-model="endDate"
-                  label="Fecha fin"
-                  type="date"
-                  :min="startDate || minDate"
-                  @update:model-value="calculate"
-                  prepend-inner-icon="mdi-calendar-end"
-                />
-              </div>
-              <div class="form-row">
+              <label class="form-label">Selecciona el período en el calendario</label>
+              <DateRangeCalendar
+                v-model="dateRange"
+                :work-days-per-week="employeeInfo?.work_days_per_week || 6"
+              />
+              <div class="form-row mt-3">
                 <v-text-field
                   :model-value="calculatedDays"
                   label="Días a tomar"
@@ -350,10 +337,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import api from '@/api/axios'
 import { useNotificationStore } from '@/stores/notification'
 import Header from '@/components/layout/Header.vue'
+import DateRangeCalendar from '@/components/DateRangeCalendar.vue'
 
 const notification = useNotificationStore()
 const employees = ref<any[]>([])
@@ -378,6 +366,13 @@ const uploadTarget = ref<any>(null)
 const descansos = ref<string[]>([])
 const descanso1Date = ref('')
 const descanso2Date = ref('')
+const dateRange = ref({ start: '', end: '' })
+
+watch(() => dateRange.value.start, (val) => { startDate.value = val })
+watch(() => dateRange.value.end, (val) => {
+  endDate.value = val
+  if (val) calculate()
+})
 
 const minDate = computed(() => new Date().toISOString().split('T')[0])
 
