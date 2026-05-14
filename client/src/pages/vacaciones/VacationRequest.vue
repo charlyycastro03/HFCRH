@@ -516,7 +516,7 @@ const submit = async () => {
       end_date: endDate.value,
       days_requested: calculatedDays.value,
       return_date: returnDate.value,
-      status: 'PENDING',
+      status: 'APPROVED',
       comments: comments.value,
       type: requestType.value,
     }
