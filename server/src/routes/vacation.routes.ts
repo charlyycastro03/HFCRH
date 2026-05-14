@@ -9,6 +9,7 @@ import {
   uploadSignedRequest,
   deleteRequest,
   getVacationReport,
+  getReviewList,
 } from '../controllers/vacation.controller';
 
 const router = Router();
@@ -59,5 +60,6 @@ router.get('/requests/:id', verifyToken, getRequestsByEmployee);
 router.post('/requests/:id/upload', verifyToken, uploadSignedRequest);
 router.delete('/requests/:id', verifyToken, deleteRequest);
 router.get('/report', verifyToken, requireRole(['admin', 'hr']), getVacationReport);
+router.get('/review', verifyToken, requireRole(['admin', 'hr']), getReviewList);
 
 export default router;

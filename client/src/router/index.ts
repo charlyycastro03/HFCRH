@@ -41,6 +41,11 @@ const router = createRouter({
           component: () => import('@/pages/vacaciones/VacationRequest.vue'),
         },
         {
+          path: 'vacaciones/revisar',
+          name: 'ReviewRequests',
+          component: () => import('@/pages/vacaciones/ReviewRequests.vue'),
+        },
+        {
           path: 'rh/reportes',
           name: 'Reports',
           component: () => import('@/pages/rh/Reports.vue'),

@@ -232,3 +232,31 @@ export async function getVacationReport(req: Request, res: Response): Promise<vo
     res.status(500).json({ msg: 'Error al generar reporte' });
   }
 }
+
+export async function getReviewList(req: Request, res: Response): Promise<void> {
+  const { filter } = req.query;
+  try {
+    const db = await getDb();
+    let query: string;
+    const params: any[] = [];
+
+    if (filter === 'signed') {
+      query = `SELECT vr.*, e.department FROM vacation_requests vr
+               JOIN employees e ON vr.employee_id = e.id
+               WHERE vr.signed_file_path IS NOT NULL AND vr.signed_file_path != ''
+               ORDER BY vr.start_date DESC LIMIT 50`;
+    } else {
+      query = `SELECT vr.*, e.department FROM vacation_requests vr
+               JOIN employees e ON vr.employee_id = e.id
+               WHERE (vr.signed_file_path IS NULL OR vr.signed_file_path = '')
+               AND vr.status = 'APPROVED'
+               ORDER BY vr.start_date DESC LIMIT 50`;
+    }
+
+    const [results] = await db.query(query, params);
+    res.json(results);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: 'Error al obtener lista' });
+  }
+}

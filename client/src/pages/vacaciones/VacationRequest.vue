@@ -342,6 +342,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import api from '@/api/axios'
 import { useNotificationStore } from '@/stores/notification'
 import Header from '@/components/layout/Header.vue'
@@ -642,7 +643,15 @@ const deleteItemConfirm = async () => {
   finally { deleting.value = false }
 }
 
-onMounted(loadEmployees)
+onMounted(async () => {
+  await loadEmployees()
+  const route = useRoute()
+  const empId = route.query.employeeId
+  if (empId) {
+    selectedEmployeeId.value = Number(empId)
+    await loadEmployeeInfo()
+  }
+})
 </script>
 
 <style scoped>

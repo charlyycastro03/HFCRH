@@ -86,9 +86,9 @@ const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Juli
 const monthName = computed(() => monthNames[currentMonth.value] || '')
 
 const quickActions = [
-  { label: 'Nueva Solicitud', icon: 'mdi-plus', path: '/vacaciones/solicitar', color: 'primary' },
   { label: 'Registrar Empleado', icon: 'mdi-account-plus', path: '/admin/employees', color: 'secondary' },
-  { label: 'Ver Reportes', icon: 'mdi-file-chart', path: '/rh/reportes', color: 'info' },
+  { label: 'Listos (PDF)', icon: 'mdi-file-pdf-box', path: '/vacaciones/revisar?filter=signed', color: 'success' },
+  { label: 'Por Firmar', icon: 'mdi-file-clock', path: '/vacaciones/revisar?filter=pending', color: 'warning' },
 ]
 
 const statsCards = computed(() => [
