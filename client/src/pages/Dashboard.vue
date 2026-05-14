@@ -34,7 +34,7 @@
             <div v-for="(day, i) in calendarDays" :key="i" class="cal-cell" :class="{ 'other-month': !day.isCurrent, 'is-today': day.isToday }">
               <span class="cal-num">{{ day.num }}</span>
               <div class="cal-names">
-                <span v-for="(name, ni) in day.employees.slice(0, 3)" :key="ni" class="cal-name" :class="day.type">{{ name }}</span>
+                <span v-for="(emp, ni) in day.employees.slice(0, 3)" :key="ni" class="cal-name" :class="emp.type">{{ emp.name }}</span>
                 <span v-if="day.employees.length > 3" class="cal-more">+{{ day.employees.length - 3 }}</span>
               </div>
             </div>
@@ -111,32 +111,29 @@ const calendarDays = computed(() => {
 
   for (let p = 0; p < startPad; p++) {
     const d = new Date(year, month, p - startPad + 1)
-    days.push({ num: d.getDate(), isCurrent: false, isToday: false, employees: [], type: '' })
+    days.push({ num: d.getDate(), isCurrent: false, isToday: false, employees: [] })
   }
 
   for (let d = 1; d <= lastDay.getDate(); d++) {
     const date = new Date(year, month, d)
-    const employees: string[] = []
-    let type = ''
+    const employees: any[] = []
     for (const ev of evts) {
       if (!ev || !ev.start || !ev.title) continue
       const s = new Date(ev.start)
       const end = new Date(ev.end || ev.end_date)
       end.setHours(23, 59, 59, 999)
       if (date >= s && date <= end) {
-        employees.push(ev.title)
-        if (ev.type === 'REST_DAY') type = 'rest'
-        else if (!type) type = 'vacation'
+        employees.push({ name: ev.title, type: ev.type === 'REST_DAY' ? 'rest' : 'vacation' })
       }
     }
     const isT = date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear()
-    days.push({ num: d, isCurrent: true, isToday: isT, employees, type })
+    days.push({ num: d, isCurrent: true, isToday: isT, employees })
   }
 
   const remaining = 42 - days.length
   for (let r = 0; r < remaining; r++) {
     const d = new Date(year, month + 1, r + 1)
-    days.push({ num: d.getDate(), isCurrent: false, isToday: false, employees: [], type: '' })
+    days.push({ num: d.getDate(), isCurrent: false, isToday: false, employees: [] })
   }
 
   return days
@@ -216,17 +213,17 @@ onMounted(loadData)
 
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
 .cal-header-cell { font-size: 10px; font-weight: 700; color: #475569; text-align: center; padding: 6px 0; text-transform: uppercase; letter-spacing: 0.5px; }
-.cal-cell { background: rgba(255,255,255,0.02); border-radius: 8px; padding: 4px; min-height: 60px; display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
-.cal-cell:hover { background: rgba(99,102,241,0.06); }
-.other-month { opacity: 0.3; }
-.is-today { background: rgba(99,102,241,0.12) !important; border-color: rgba(99,102,241,0.3); }
-.cal-num { font-size: 11px; font-weight: 600; color: #94A3B8; line-height: 1; margin-bottom: 3px; }
-.is-today .cal-num { color: #6366F1; }
-.cal-names { display: flex; flex-direction: column; gap: 1px; overflow: hidden; }
-.cal-name { font-size: 9px; padding: 1px 4px; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
-.cal-name.vacation { background: rgba(99,102,241,0.2); color: #818CF8; }
-.cal-name.rest { background: rgba(249,115,22,0.2); color: #FB923C; }
-.cal-more { font-size: 9px; color: #64748B; padding: 1px 4px; font-weight: 600; }
+.cal-cell { background: rgba(255,255,255,0.03); border-radius: 8px; padding: 4px; min-height: 62px; display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.06); transition: background 0.15s; }
+.cal-cell:hover { background: rgba(99,102,241,0.08); }
+.other-month { opacity: 0.2; }
+.is-today { background: rgba(99,102,241,0.15) !important; border-color: #6366F1 !important; }
+.cal-num { font-size: 11px; font-weight: 700; color: #CBD5E1; line-height: 1; margin-bottom: 3px; }
+.is-today .cal-num { color: #A5B4FC; }
+.cal-names { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+.cal-name { font-size: 9px; padding: 2px 5px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; font-weight: 600; }
+.cal-name.vacation { background: rgba(99,102,241,0.35); color: #C7D2FE; }
+.cal-name.rest { background: rgba(251,146,60,0.35); color: #FED7AA; }
+.cal-more { font-size: 9px; color: #64748B; padding: 1px 4px; font-weight: 700; }
 
 .quick-grid { display: flex; flex-direction: column; gap: 8px; }
 .quick-btn { height: 44px !important; font-weight: 600; justify-content: flex-start; }

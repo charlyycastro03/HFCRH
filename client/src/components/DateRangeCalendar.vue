@@ -121,26 +121,22 @@ function nextMonth() { if (calMonth.value === 11) { calMonth.value = 0; calYear.
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
 .cal-hd { font-size: 10px; font-weight: 700; color: #475569; text-align: center; padding: 6px 0; text-transform: uppercase; }
 .cal-cell { border-radius: 8px; padding: 6px 4px; text-align: center; cursor: pointer; position: relative; transition: all 0.12s; min-height: 36px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.cal-cell:hover { background: rgba(99,102,241,0.12); }
+.cal-cell:hover { background: rgba(99,102,241,0.15); }
 .other-month { opacity: 0.2; pointer-events: none; }
-.is-past { opacity: 0.35; pointer-events: none; }
-.cal-num { font-size: 12px; font-weight: 600; color: #94A3B8; line-height: 1; position: relative; z-index: 1; }
-.is-holiday .cal-num { color: #EF4444; }
+.is-past { opacity: 0.3; pointer-events: none; }
+.cal-num { font-size: 13px; font-weight: 600; color: #CBD5E1; line-height: 1; position: relative; z-index: 1; }
+.is-holiday .cal-num { color: #FCA5A5; font-weight: 700; }
 .is-weekend .cal-num { color: #64748B; }
-.is-rest .cal-num { color: #F97316; font-weight: 700; }
-.is-rest-blocked { cursor: not-allowed !important; }
-.is-rest-blocked .cal-num { color: #475569; }
-.is-rest-blocked:hover { background: transparent !important; }
-.is-start .cal-num, .is-end .cal-num, .is-range .cal-num { color: #fff; }
+.is-start .cal-num, .is-end .cal-num, .is-range .cal-num { color: #fff; font-weight: 700; }
 .is-start { background: #6366F1 !important; border-radius: 8px 0 0 8px; }
 .is-end { background: #6366F1 !important; border-radius: 0 8px 8px 0; }
 .is-start.is-end { border-radius: 8px; }
-.is-range { background: rgba(99,102,241,0.2); border-radius: 0; }
-.is-rest { background: rgba(249,115,22,0.25) !important; }
-.is-rest .cal-num { color: #F97316; font-weight: 700; }
-.cal-marker { width: 4px; height: 4px; border-radius: 50%; position: absolute; bottom: 3px; }
+.is-range { background: rgba(99,102,241,0.3); border-radius: 0; }
+.is-rest { background: rgba(251,146,60,0.3) !important; }
+.is-rest .cal-num { color: #FED7AA; font-weight: 700; }
+.cal-marker { width: 5px; height: 5px; border-radius: 50%; position: absolute; bottom: 2px; }
 .holiday-marker { background: #EF4444; }
-.weekend-marker { background: #64748B; }
+.weekend-marker { background: #475569; }
 .cal-info { font-size: 12px; color: #6366F1; text-align: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); }
 .rest-info { color: #F97316; }
 </style>
