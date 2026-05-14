@@ -148,10 +148,14 @@
             </Transition>
 
             <div v-if="employeeInfo" class="form-section">
-              <label class="form-label">Selecciona el período en el calendario</label>
+              <label v-if="requestType === 'VACATION'" class="form-label">Selecciona el período en el calendario</label>
+              <label v-else class="form-label rest-label">Selecciona tus días de descanso</label>
               <DateRangeCalendar
                 v-model="dateRange"
                 :work-days-per-week="employeeInfo?.work_days_per_week || 6"
+                :mode="requestType === 'REST_DAY' ? 'rest' : 'vacation'"
+                :rest-selected="restDays"
+                @update:rest-selected="onRestSelected"
               />
               <div class="form-row mt-3">
                 <v-text-field
@@ -367,6 +371,20 @@ const descansos = ref<string[]>([])
 const descanso1Date = ref('')
 const descanso2Date = ref('')
 const dateRange = ref({ start: '', end: '' })
+const restDays = ref<string[]>([])
+
+function onRestSelected(days: string[]) {
+  restDays.value = days
+  if (days.length > 0) {
+    startDate.value = days[0]
+    endDate.value = days[0]
+    calculatedDays.value = 1
+  } else {
+    startDate.value = ''
+    endDate.value = ''
+    calculatedDays.value = 0
+  }
+}
 
 watch(() => dateRange.value.start, (val) => { startDate.value = val })
 watch(() => dateRange.value.end, (val) => {
@@ -464,6 +482,31 @@ const calculate = async () => {
 const submit = async () => {
   if (!selectedEmployeeId.value || !calculatedDays.value) return
   submitting.value = true; successMsg.value = ''; errorMsg.value = ''
+
+  if (requestType.value === 'REST_DAY' && restDays.value.length > 0) {
+    try {
+      for (const day of restDays.value) {
+        await api.post('/vacations/requests', {
+          employee_id: selectedEmployeeId.value,
+          request_date: new Date().toISOString().split('T')[0],
+          start_date: day,
+          end_date: day,
+          days_requested: 1,
+          status: 'PENDING',
+          comments: comments.value || 'Día de descanso',
+          type: 'REST_DAY',
+        })
+      }
+      notification.success('Días de descanso solicitados correctamente')
+      restDays.value = []; startDate.value = ''; endDate.value = ''; calculatedDays.value = 0; comments.value = ''
+      await loadEmployeeInfo()
+    } catch (err: any) {
+      errorMsg.value = err.response?.data?.msg || 'Error al crear solicitud'
+      notification.error(errorMsg.value)
+    } finally { submitting.value = false }
+    return
+  }
+
   try {
     const payload: any = {
       employee_id: selectedEmployeeId.value,
@@ -898,6 +941,8 @@ onMounted(loadEmployees)
 }
 
 .form-section { margin-top: 16px; }
+.form-label { font-size: 12px; font-weight: 600; color: #94A3B8; margin-bottom: 10px; display: block; }
+.rest-label { color: #F97316; }
 
 .form-row {
   display: grid;
