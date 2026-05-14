@@ -244,12 +244,14 @@ export async function getReviewList(req: Request, res: Response): Promise<void> 
       query = `SELECT vr.*, e.department FROM vacation_requests vr
                JOIN employees e ON vr.employee_id = e.id
                WHERE vr.signed_file_path IS NOT NULL AND vr.signed_file_path != ''
+               AND vr.type = 'VACATION'
                ORDER BY vr.start_date DESC LIMIT 50`;
     } else {
       query = `SELECT vr.*, e.department FROM vacation_requests vr
                JOIN employees e ON vr.employee_id = e.id
                WHERE (vr.signed_file_path IS NULL OR vr.signed_file_path = '')
-               AND vr.status = 'APPROVED'
+               AND vr.type = 'VACATION'
+               AND vr.status IN ('APPROVED', 'PENDING')
                ORDER BY vr.start_date DESC LIMIT 50`;
     }
 
