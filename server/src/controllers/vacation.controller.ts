@@ -101,11 +101,13 @@ export async function createVacationRequest(req: Request, res: Response): Promis
       return;
     }
 
+    const returnDateObj = calculateReturnDate(end_date, workDays);
+    const returnDate = returnDateObj.toISOString().split('T')[0];
     const empName = emp.name;
     await db.query(
-      `INSERT INTO vacation_requests (employee_id, employee_name, request_date, start_date, end_date, days_requested, status, comments, type)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [employee_id, empName, request_date || new Date(), start_date, end_date, days_requested, status || 'APPROVED', comments, requestType]
+      `INSERT INTO vacation_requests (employee_id, employee_name, request_date, start_date, end_date, days_requested, return_date, status, comments, type)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [employee_id, empName, request_date || new Date(), start_date, end_date, days_requested, returnDate, status || 'APPROVED', comments, requestType]
     );
 
     if (emp.es_arquitecto && descansos && descanso_dates && descansos.length > 0 && requestType === 'VACATION') {

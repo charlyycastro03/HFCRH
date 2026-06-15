@@ -33,7 +33,7 @@ export async function getCalendarEvents(req: Request, res: Response): Promise<vo
     const db = await getDb();
     const [results] = await db.query<any[]>(
       `SELECT r.id, r.employee_name as title, r.start_date as start, r.end_date as end_date,
-              r.type, r.days_requested, r.status
+              r.return_date, r.type, r.days_requested, r.status
        FROM vacation_requests r
        WHERE (r.status IN ('APPROVED', 'FIRMADO')) OR (r.type = 'REST_DAY' AND r.status != 'REJECTED')`
     );
@@ -43,6 +43,7 @@ export async function getCalendarEvents(req: Request, res: Response): Promise<vo
       title: ev.title,
       start: ev.start,
       end: ev.end_date,
+      return_date: ev.return_date,
       days: ev.days_requested,
       type: ev.type || 'VACATION',
       color: 'primary',

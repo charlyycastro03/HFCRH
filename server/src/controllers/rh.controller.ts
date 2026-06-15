@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { getDb } from '../config/db';
+import { calculateReturnDate } from '../utils/holidays';
 import { vacationPeriodService } from '../services/vacation-period.service';
 
 export async function getMyVacations(req: Request, res: Response): Promise<void> {
@@ -74,10 +75,12 @@ export async function requestTimeOff(req: Request, res: Response): Promise<void>
       currentDate.setUTCDate(currentDate.getUTCDate() + 1);
     }
 
+    const retDate = calculateReturnDate(endDate, workDays);
+    const retDateStr = retDate.toISOString().split('T')[0];
     await db.query(
-      `INSERT INTO vacation_requests (employee_id, employee_name, request_date, start_date, end_date, days_requested, status, comments, type)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [employee.id, employee.name, new Date(), startDate, endDate, daysQuantity, 'PENDING', reason, type || 'VACATION']
+      `INSERT INTO vacation_requests (employee_id, employee_name, request_date, start_date, end_date, days_requested, return_date, status, comments, type)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [employee.id, employee.name, new Date(), startDate, endDate, daysQuantity, retDateStr, 'PENDING', reason, type || 'VACATION']
     );
 
     res.json({ success: true, message: 'Solicitud enviada' });
@@ -161,6 +164,7 @@ export async function generateReport(req: Request, res: Response): Promise<void>
     let query = `SELECT vr.id as RequestID, vr.employee_name as FullName, e.department as Department,
                         vr.type as RequestType, vr.days_requested as DaysQuantity,
                         vr.start_date as StartDate, vr.end_date as EndDate,
+                        vr.return_date as ReturnDate,
                         vr.status as Status, vr.comments as Reason, vr.signed_file_path
                  FROM vacation_requests vr JOIN employees e ON vr.employee_id = e.id WHERE 1=1`;
     const params: any[] = [];

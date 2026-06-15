@@ -13,8 +13,9 @@
               <tr>
                 <th>Empleado</th>
                 <th>Departamento</th>
-                <th>Período</th>
+                <th>Inicio</th>
                 <th>Días</th>
+                <th>Regreso</th>
                 <th>Estado</th>
               </tr>
             </thead>
@@ -22,12 +23,13 @@
               <tr v-for="r in requests" :key="r.id" style="cursor:pointer" @click="goToRequest(r)">
                 <td class="name-cell">{{ r.employee_name }}</td>
                 <td>{{ r.department || '—' }}</td>
-                <td>{{ fmtDate(r.start_date) }} — {{ fmtDate(r.end_date) }}</td>
+                <td>{{ fmtDate(r.start_date) }}</td>
                 <td class="days-cell">{{ r.days_requested }}</td>
+                <td class="return-cell">{{ r.return_date ? fmtDate(r.return_date) : '—' }}</td>
                 <td><v-chip size="x-small" :color="r.signed_file_path ? 'success' : 'warning'" variant="tonal">{{ r.signed_file_path ? 'Listo' : 'Pendiente' }}</v-chip></td>
               </tr>
               <tr v-if="!requests.length">
-                <td colspan="5" class="empty-cell">Sin solicitudes</td>
+                <td colspan="6" class="empty-cell">Sin solicitudes</td>
               </tr>
             </tbody>
           </table>
@@ -83,6 +85,7 @@ onMounted(async () => {
 .name-cell { font-weight: 600; color: #F1F5F9 !important; cursor: pointer; }
 .name-cell:hover { color: #6366F1 !important; }
 .days-cell { font-weight: 700; }
+.return-cell { color: #22C55E !important; font-size: 12px; }
 .empty-cell { text-align: center; color: #475569; padding: 40px !important; }
 .btn-back { margin-top: 16px; }
 </style>
