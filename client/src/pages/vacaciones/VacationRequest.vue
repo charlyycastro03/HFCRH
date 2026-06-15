@@ -258,12 +258,8 @@
 
               <div class="history-dates">
                 <v-icon size="14" class="mr-1">mdi-calendar-range</v-icon>
-                {{ formatShort(item.start_date) }}
+                {{ formatShort(item.start_date) }} — {{ formatShort(item.end_date) }}
                 <span class="history-days">{{ item.days_requested }} día{{ item.days_requested !== 1 ? 's' : '' }}</span>
-              </div>
-              <div v-if="item.return_date" class="history-return">
-                <v-icon size="12" class="mr-1">mdi-login</v-icon>
-                Regresa {{ formatDateReturn(item.return_date) }}
               </div>
 
               <div v-if="item.comments" class="history-comments">{{ item.comments }}</div>
@@ -435,7 +431,6 @@ const seniority = computed(() => {
 const formatDate = (d: string) => d ? new Date(d).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'
 const formatDateLong = (d: string) => d ? new Date(d).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' }) : '-'
 const formatShort = (d: string) => d ? new Date(d).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) : '-'
-const formatDateReturn = (d: string) => d ? new Date(d).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' }) : '-'
 const statusColor = (s: string) => s === 'APPROVED' ? 'success' : s === 'FIRMADO' ? 'success' : s === 'REJECTED' ? 'error' : 'warning'
 const statusLabel = (s: string) => s === 'APPROVED' ? 'Aprobada' : s === 'FIRMADO' ? 'Lista' : s === 'REJECTED' ? 'Rechazada' : 'Pendiente'
 
@@ -1021,15 +1016,6 @@ onMounted(async () => {
   color: #64748B;
   margin-top: 6px;
   font-style: italic;
-}
-
-.history-return {
-  font-size: 11px;
-  color: #22C55E;
-  margin-top: 4px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 
 .history-actions {

@@ -118,8 +118,8 @@
                 <th>Departamento</th>
                 <th>Tipo</th>
                 <th>Inicio</th>
+                <th>Fin</th>
                 <th>Días</th>
-                <th>Regreso</th>
                 <th>Estado</th>
                 <th>PDF</th>
               </tr>
@@ -135,8 +135,8 @@
                   </span>
                 </td>
                 <td>{{ fmt(item.StartDate) }}</td>
+                <td>{{ fmt(item.EndDate) }}</td>
                 <td class="days">{{ item.DaysQuantity }}</td>
-                <td class="return-cell">{{ item.ReturnDate ? fmt(item.ReturnDate) : '—' }}</td>
                 <td><span class="status-badge" :class="(item.Status || '').toLowerCase()">{{ item.Status }}</span></td>
                 <td>
                   <v-icon v-if="item.signed_file_path" color="success" size="18">mdi-file-check</v-icon>
@@ -229,11 +229,11 @@ const clearFilters = () => {
 const exportExcel = () => {
   if (!filteredData.value.length) return
   import('xlsx').then(XLSX => {
-    const rows = [['FOLIO', 'EMPLEADO', 'DEPARTAMENTO', 'TIPO', 'INICIO', 'DÍAS', 'REGRESO', 'ESTADO', 'PDF'],
-      ...filteredData.value.map((r: any) => [r.RequestID, r.FullName, r.Department||'', r.RequestType==='VACATION'?'Vacaciones':'Descanso', r.StartDate, r.DaysQuantity, r.ReturnDate||'', r.Status, r.signed_file_path?'Sí':'No'])]
+    const rows = [['FOLIO', 'EMPLEADO', 'DEPARTAMENTO', 'TIPO', 'INICIO', 'FIN', 'DÍAS', 'ESTADO', 'PDF'],
+      ...filteredData.value.map((r: any) => [r.RequestID, r.FullName, r.Department||'', r.RequestType==='VACATION'?'Vacaciones':'Descanso', r.StartDate, r.EndDate, r.DaysQuantity, r.Status, r.signed_file_path?'Sí':'No'])]
     const ws = XLSX.utils.aoa_to_sheet(rows)
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Vacaciones')
-    ws['!cols'] = [{wch:6},{wch:28},{wch:20},{wch:12},{wch:12},{wch:6},{wch:12},{wch:12},{wch:6}]
+    ws['!cols'] = [{wch:6},{wch:28},{wch:20},{wch:12},{wch:12},{wch:12},{wch:6},{wch:12},{wch:6}]
     XLSX.writeFile(wb, `reporte_${new Date().toISOString().split('T')[0]}.xlsx`)
   })
 }
@@ -261,8 +261,8 @@ const exportPDF = async () => {
   doc.text(`Total: ${filteredData.value.length} registro(s)`, margin, y)
   y += 6
 
-    const cols = ['Folio', 'Empleado', 'Departamento', 'Tipo', 'Inicio', 'Días', 'Regreso', 'Estado']
-    const widths = [16, 50, 36, 26, 26, 12, 26, 26]
+    const cols = ['Folio', 'Empleado', 'Departamento', 'Tipo', 'Inicio', 'Fin', 'Días', 'Estado']
+    const widths = [16, 55, 40, 28, 28, 28, 12, 28]
   const startX = margin
 
   doc.setFillColor(241, 245, 249)
@@ -278,7 +278,7 @@ const exportPDF = async () => {
     if (y > 190) { doc.addPage(); y = 20 }
     if (ri % 2 === 0) { doc.setFillColor(248, 250, 252); doc.rect(startX, y, widths.reduce((a,b)=>a+b,0), 6, 'F') }
     x = startX
-    const vals = [String(r.RequestID), r.FullName, r.Department||'-', r.RequestType==='VACATION'?'Vacaciones':'Descanso', fmt(r.StartDate), String(r.DaysQuantity), r.ReturnDate ? fmt(r.ReturnDate) : '-', r.Status]
+    const vals = [String(r.RequestID), r.FullName, r.Department||'-', r.RequestType==='VACATION'?'Vacaciones':'Descanso', fmt(r.StartDate), fmt(r.EndDate), String(r.DaysQuantity), r.Status]
     vals.forEach((v, i) => { doc.text(v, x + 1, y + 4.5); x += widths[i] })
   })
 
@@ -316,7 +316,6 @@ onMounted(async () => {
 .folio { font-weight: 700; color: #6366F1 !important; font-size: 12px !important; }
 .name { font-weight: 600; color: #F1F5F9 !important; }
 .days { font-weight: 700; color: #F1F5F9 !important; }
-.return-cell { color: #22C55E !important; font-size: 12px; }
 .type-badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
 .type-badge.vacation { background: rgba(99,102,241,0.12); color: #818CF8; }
 .type-badge.rest { background: rgba(249,115,22,0.12); color: #FB923C; }
