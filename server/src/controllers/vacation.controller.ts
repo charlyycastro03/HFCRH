@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { getDb } from '../config/db';
-import { calculateBusinessDays, calculateReturnDate } from '../utils/holidays';
+import { calculateBusinessDays, calculateReturnDate, calculateEffectiveEndDate } from '../utils/holidays';
 import { calculateEntitlement } from '../utils/lft';
 import { vacationPeriodService } from '../services/vacation-period.service';
 
@@ -56,9 +56,11 @@ export async function calculateRequest(req: Request, res: Response): Promise<voi
     workDays = parseInt(workDays, 10);
 
     const daysRequested = calculateBusinessDays(startDate, endDate, workDays);
-    const returnDate = calculateReturnDate(endDate, workDays);
+    const effectiveEndDate = calculateEffectiveEndDate(startDate, endDate, workDays);
+    const effectiveEndStr = effectiveEndDate.toISOString().split('T')[0];
+    const returnDate = calculateReturnDate(effectiveEndStr, workDays);
 
-    res.json({ days_requested: daysRequested, return_date: returnDate, start_date: startDate, end_date: endDate });
+    res.json({ days_requested: daysRequested, return_date: returnDate, start_date: startDate, end_date: effectiveEndStr });
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: 'Error al calcular días' });

@@ -467,6 +467,7 @@ const calculate = async () => {
       endDate: endDate.value,
     })
     calculatedDays.value = data.days_requested
+    endDate.value = data.end_date
     const d = new Date(data.return_date)
     const dayName = d.toLocaleDateString('es-MX', { weekday: 'long' })
     returnDate.value = `${dayName}, ${d.getDate()} de ${d.toLocaleDateString('es-MX', { month: 'long' })} de ${d.getFullYear()}`

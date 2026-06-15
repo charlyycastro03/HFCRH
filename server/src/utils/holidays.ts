@@ -53,3 +53,18 @@ export function calculateReturnDate(endDate: string, workDaysPerWeek: number): D
   }
   return returnDate;
 }
+
+export function calculateEffectiveEndDate(startDate: string, endDate: string, workDaysPerWeek: number): Date {
+  const current = new Date(endDate + 'T12:00:00');
+  const start = new Date(startDate + 'T12:00:00');
+
+  while (current >= start) {
+    const dayOfWeek = current.getDay();
+    let isWorkDay = true;
+    if (workDaysPerWeek <= 6 && dayOfWeek === 0) isWorkDay = false;
+    else if (workDaysPerWeek <= 5 && dayOfWeek === 6) isWorkDay = false;
+    if (isWorkDay && !isMexicanHoliday(current)) return current;
+    current.setDate(current.getDate() - 1);
+  }
+  return new Date(endDate + 'T12:00:00');
+}

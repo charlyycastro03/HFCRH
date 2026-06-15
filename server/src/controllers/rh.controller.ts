@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { getDb } from '../config/db';
-import { calculateReturnDate } from '../utils/holidays';
+import { calculateReturnDate, calculateEffectiveEndDate } from '../utils/holidays';
 import { vacationPeriodService } from '../services/vacation-period.service';
 
 export async function getMyVacations(req: Request, res: Response): Promise<void> {
@@ -75,12 +75,14 @@ export async function requestTimeOff(req: Request, res: Response): Promise<void>
       currentDate.setUTCDate(currentDate.getUTCDate() + 1);
     }
 
-    const retDate = calculateReturnDate(endDate, workDays);
+    const effectiveEnd = calculateEffectiveEndDate(startDate, endDate, workDays);
+    const effectiveEndStr = effectiveEnd.toISOString().split('T')[0];
+    const retDate = calculateReturnDate(effectiveEndStr, workDays);
     const retDateStr = retDate.toISOString().split('T')[0];
     await db.query(
       `INSERT INTO vacation_requests (employee_id, employee_name, request_date, start_date, end_date, days_requested, return_date, status, comments, type)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [employee.id, employee.name, new Date(), startDate, endDate, daysQuantity, retDateStr, 'PENDING', reason, type || 'VACATION']
+      [employee.id, employee.name, new Date(), startDate, effectiveEndStr, daysQuantity, retDateStr, 'PENDING', reason, type || 'VACATION']
     );
 
     res.json({ success: true, message: 'Solicitud enviada' });
